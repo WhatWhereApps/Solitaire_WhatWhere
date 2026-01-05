@@ -76,9 +76,10 @@ export const useSolitaire = () => {
   const drawFromDeck = useCallback(() => {
     setGameState(prev => {
       if (prev.deck.length === 0) {
-        // Reset deck from waste (keep waste cards in same order, just flip them face down)
+        // Reset deck from waste - move all waste cards back to deck in original order
         if (prev.waste.length === 0) return prev; // No cards to reset
-        const newDeck = [...prev.waste].reverse().map(card => ({ ...card, faceUp: false }));
+        // Take waste pile (oldest first), flip all face down, put back in deck
+        const newDeck = prev.waste.map(card => ({ ...card, faceUp: false }));
         return { 
           ...prev, 
           deck: newDeck, 
@@ -86,10 +87,11 @@ export const useSolitaire = () => {
           moves: prev.moves + 1
         };
       } else {
-        const newCard = { ...prev.deck[prev.deck.length - 1], faceUp: true };
+        // Draw from deck - take first card (not last) to maintain order
+        const newCard = { ...prev.deck[0], faceUp: true };
         return {
           ...prev,
-          deck: prev.deck.slice(0, -1),
+          deck: prev.deck.slice(1),
           waste: [...prev.waste, newCard],
           moves: prev.moves + 1
         };
