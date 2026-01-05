@@ -1,22 +1,83 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Card, GameState, Suit, Rank } from '@/types/solitaire';
+import { Card, GameState, Suit, Rank, DrawPileNode, DrawPileState } from '@/types/solitaire';
 import { toast } from 'sonner';
 
 const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
 const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
+// Helper to create the linked list for draw pile
+const createDrawPileList = (cards: Card[]): DrawPileState => {
+  // Create empty head node
+  const head: DrawPileNode = { card: null, next: null };
+  
+  // Build the list
+  let current = head;
+  for (const card of cards) {
+    const node: DrawPileNode = { card: { ...card, faceUp: false }, next: null };
+    current.next = node;
+    current = node;
+  }
+  
+  // Create empty tail node
+  const tail: DrawPileNode = { card: null, next: null };
+  current.next = tail;
+  
+  // Make it circular: tail points back to head
+  tail.next = head;
+  
+  return {
+    head,
+    current: head, // Start at head (empty - shows deck is ready)
+    tail,
+  };
+};
+
+// Get the visible card in the waste (the card after current position)
+const getWasteCard = (drawPile: DrawPileState): Card | null => {
+  if (drawPile.current === drawPile.head) {
+    return null; // At start, no card drawn yet
+  }
+  // Current position's card is the visible waste card
+  return drawPile.current.card;
+};
+
+// Check if deck has cards remaining to draw
+const hasDeckCards = (drawPile: DrawPileState): boolean => {
+  // If we're at tail, no more cards to draw
+  if (drawPile.current === drawPile.tail) {
+    return false;
+  }
+  // Check if next node has a card
+  return drawPile.current.next !== null && drawPile.current.next !== drawPile.tail;
+};
+
+// Check if we're at the end (can reset)
+const isAtEnd = (drawPile: DrawPileState): boolean => {
+  return drawPile.current === drawPile.tail;
+};
+
+// Check if we're at the start
+const isAtStart = (drawPile: DrawPileState): boolean => {
+  return drawPile.current === drawPile.head;
+};
+
 export const useSolitaire = () => {
-  const [gameState, setGameState] = useState<GameState>({
-    deck: [],
-    waste: [],
-    foundations: [[], [], [], []],
-    tableau: [[], [], [], [], [], [], []],
-    selectedCard: null,
-    selectedPile: null,
-    moves: 0,
-    score: 0,
-    time: 0,
-    isWon: false,
+  const [gameState, setGameState] = useState<GameState>(() => {
+    const emptyHead: DrawPileNode = { card: null, next: null };
+    const emptyTail: DrawPileNode = { card: null, next: emptyHead };
+    emptyHead.next = emptyTail;
+    
+    return {
+      drawPile: { head: emptyHead, current: emptyHead, tail: emptyTail },
+      foundations: [[], [], [], []],
+      tableau: [[], [], [], [], [], [], []],
+      selectedCard: null,
+      selectedPile: null,
+      moves: 0,
+      score: 0,
+      time: 0,
+      isWon: false,
+    };
   });
 
   const createDeck = useCallback((): Card[] => {
@@ -57,9 +118,11 @@ export const useSolitaire = () => {
       }
     }
 
+    // Remaining cards go to draw pile as linked list
+    const drawPile = createDrawPileList(deck);
+
     setGameState({
-      deck,
-      waste: [],
+      drawPile,
       foundations: [[], [], [], []],
       tableau,
       selectedCard: null,
@@ -75,25 +138,30 @@ export const useSolitaire = () => {
 
   const drawFromDeck = useCallback(() => {
     setGameState(prev => {
-      if (prev.deck.length === 0) {
-        // Reset deck from waste - move all waste cards back to deck in original order
-        if (prev.waste.length === 0) return prev; // No cards to reset
-        // Take waste pile (oldest first), flip all face down, put back in deck
-        const newDeck = prev.waste.map(card => ({ ...card, faceUp: false }));
-        return { 
-          ...prev, 
-          deck: newDeck, 
-          waste: [],
-          moves: prev.moves + 1
-        };
-      } else {
-        // Draw from deck - take first card (not last) to maintain order
-        const newCard = { ...prev.deck[0], faceUp: true };
+      const { drawPile } = prev;
+      
+      if (isAtEnd(drawPile)) {
+        // At tail (end), reset to head (start)
         return {
           ...prev,
-          deck: prev.deck.slice(1),
-          waste: [...prev.waste, newCard],
-          moves: prev.moves + 1
+          drawPile: {
+            ...drawPile,
+            current: drawPile.head,
+          },
+          moves: prev.moves + 1,
+        };
+      } else {
+        // Move to next node
+        const nextNode = drawPile.current.next;
+        if (!nextNode) return prev;
+        
+        return {
+          ...prev,
+          drawPile: {
+            ...drawPile,
+            current: nextNode,
+          },
+          moves: prev.moves + 1,
         };
       }
     });
@@ -123,6 +191,33 @@ export const useSolitaire = () => {
     return card.color !== topCard.color && getRankValue(card.rank) === getRankValue(topCard.rank) - 1;
   };
 
+  // Remove a card from the draw pile linked list
+  const removeCardFromDrawPile = (drawPile: DrawPileState, cardId: string): DrawPileState => {
+    // Find and remove the node with this card
+    let prev = drawPile.head;
+    let current = drawPile.head.next;
+    
+    while (current && current !== drawPile.tail) {
+      if (current.card?.id === cardId) {
+        // Remove this node by linking prev to next
+        prev.next = current.next;
+        
+        // If we removed the current viewing position, move back to prev
+        if (drawPile.current === current) {
+          return {
+            ...drawPile,
+            current: prev,
+          };
+        }
+        return drawPile;
+      }
+      prev = current;
+      current = current.next;
+    }
+    
+    return drawPile;
+  };
+
   const moveCard = useCallback((
     fromType: string, 
     fromIndex: number | undefined, 
@@ -136,8 +231,9 @@ export const useSolitaire = () => {
       
       // Get cards to move
       if (fromType === 'waste') {
-        if (prev.waste.length === 0) return prev;
-        cardsToMove = [prev.waste[prev.waste.length - 1]];
+        const wasteCard = getWasteCard(prev.drawPile);
+        if (!wasteCard) return prev;
+        cardsToMove = [wasteCard];
       } else if (fromType === 'tableau' && fromIndex !== undefined) {
         const pile = prev.tableau[fromIndex];
         if (cardIndex !== undefined) {
@@ -168,7 +264,8 @@ export const useSolitaire = () => {
 
       // Remove cards from source
       if (fromType === 'waste') {
-        newState.waste = prev.waste.slice(0, -1);
+        // Remove card from the linked list
+        newState.drawPile = removeCardFromDrawPile(prev.drawPile, cardsToMove[0].id);
       } else if (fromType === 'tableau' && fromIndex !== undefined) {
         newState.tableau = [...prev.tableau];
         if (cardIndex !== undefined) {
@@ -233,21 +330,8 @@ export const useSolitaire = () => {
   }, []);
 
   const restartGame = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      deck: createDeck(),
-      waste: [],
-      foundations: [[], [], [], []],
-      tableau: [[], [], [], [], [], [], []],
-      selectedCard: null,
-      selectedPile: null,
-      moves: 0,
-      score: 0,
-      time: 0,
-      isWon: false,
-    }));
     dealCards();
-  }, [createDeck, dealCards]);
+  }, [dealCards]);
 
   // Timer effect
   useEffect(() => {
@@ -265,6 +349,12 @@ export const useSolitaire = () => {
     dealCards();
   }, [dealCards]);
 
+  // Computed values for components to use
+  const wasteCard = getWasteCard(gameState.drawPile);
+  const deckHasCards = hasDeckCards(gameState.drawPile);
+  const atEnd = isAtEnd(gameState.drawPile);
+  const atStart = isAtStart(gameState.drawPile);
+
   return {
     gameState,
     dealCards,
@@ -272,5 +362,10 @@ export const useSolitaire = () => {
     moveCard,
     selectCard,
     restartGame,
+    // New helpers for draw pile
+    wasteCard,
+    deckHasCards,
+    atEnd,
+    atStart,
   };
 };

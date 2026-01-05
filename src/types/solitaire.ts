@@ -9,9 +9,21 @@ export interface Card {
   color: 'red' | 'black';
 }
 
+// Linked list node for draw pile
+export interface DrawPileNode {
+  card: Card | null; // null represents empty position (start/end)
+  next: DrawPileNode | null;
+}
+
+// Draw pile state - cycles through a linked list
+export interface DrawPileState {
+  head: DrawPileNode; // Start of list (always empty)
+  current: DrawPileNode; // Current position in the cycle
+  tail: DrawPileNode; // End of list (always empty)
+}
+
 export interface GameState {
-  deck: Card[];
-  waste: Card[];
+  drawPile: DrawPileState;
   foundations: Card[][];
   tableau: Card[][];
   selectedCard: Card | null;

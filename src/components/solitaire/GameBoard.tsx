@@ -1,5 +1,5 @@
 import { Card } from './Card';
-import { GameState } from '@/types/solitaire';
+import { Card as CardType, GameState } from '@/types/solitaire';
 import { cn } from '@/lib/utils';
 import { CardBackDesign, HandPreference } from '@/hooks/useGameSettings';
 
@@ -18,6 +18,10 @@ interface GameBoardProps {
   };
   cardBackDesign?: CardBackDesign;
   handPreference?: HandPreference;
+  // Draw pile state from linked list
+  wasteCard: CardType | null;
+  deckHasCards: boolean;
+  atEnd: boolean;
 }
 
 export const GameBoard = ({ 
@@ -30,9 +34,12 @@ export const GameBoard = ({
   onDragEnd, 
   dragState,
   cardBackDesign = 'classic-blue',
-  handPreference = 'right'
+  handPreference = 'right',
+  wasteCard,
+  deckHasCards,
+  atEnd,
 }: GameBoardProps) => {
-  const { deck, waste, foundations, tableau, selectedCard } = gameState;
+  const { foundations, tableau, selectedCard } = gameState;
 
   // For right-hand: foundations left, deck right
   // For left-hand: deck left, foundations right
@@ -88,12 +95,10 @@ export const GameBoard = ({
   // Deck and Waste component
   const DeckWastePile = () => (
     <div className={cn("flex gap-1 sm:gap-2 lg:gap-4", isRightHand ? "order-2 ml-4 sm:ml-6" : "order-1")}>
-      {/* Deck - on right for right-hand, on left for left-hand */}
-      {!isRightHand && (
-        <DeckPile />
-      )}
+      {/* Deck - on left for left-hand users */}
+      {!isRightHand && <DeckPile />}
       
-      {/* Waste */}
+      {/* Waste - shows the current visible card from the linked list */}
       <div 
         className={cn(
           "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-dashed border-border relative transition-all duration-300",
@@ -102,15 +107,15 @@ export const GameBoard = ({
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, 'waste')}
       >
-        {waste.length > 0 ? (
+        {wasteCard ? (
           <Card
-            card={waste[waste.length - 1]}
-            onClick={() => onCardClick(waste[waste.length - 1], 'waste')}
-            onDragStart={(e) => onDragStart(waste[waste.length - 1], 'waste')}
+            card={{ ...wasteCard, faceUp: true }}
+            onClick={() => onCardClick(wasteCard, 'waste')}
+            onDragStart={(e) => onDragStart(wasteCard, 'waste')}
             onDragEnd={onDragEnd}
-            isSelected={selectedCard?.id === waste[waste.length - 1]?.id}
+            isSelected={selectedCard?.id === wasteCard.id}
             isSelectable={true}
-            isDragging={dragState.isDragging && dragState.dragCard?.id === waste[waste.length - 1]?.id}
+            isDragging={dragState.isDragging && dragState.dragCard?.id === wasteCard.id}
             cardBackDesign={cardBackDesign}
           />
         ) : (
@@ -118,34 +123,32 @@ export const GameBoard = ({
         )}
       </div>
 
-      {/* Deck - on right for right-hand */}
-      {isRightHand && (
-        <DeckPile />
-      )}
+      {/* Deck - on right for right-hand users */}
+      {isRightHand && <DeckPile />}
     </div>
   );
 
-  // Deck pile component
+  // Deck pile component - shows card back if cards remain, reset icon if at end
   const DeckPile = () => (
     <div
       className={cn(
         "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-dashed transition-all duration-300",
-        deck.length > 0 
+        deckHasCards 
           ? "border-transparent cursor-pointer" 
-          : waste.length > 0 
+          : atEnd 
             ? "border-border bg-game-felt-light hover:bg-muted/50 cursor-pointer"
             : "border-border bg-game-felt-light cursor-not-allowed opacity-50"
       )}
-      onClick={deck.length > 0 || waste.length > 0 ? onDeckClick : undefined}
+      onClick={deckHasCards || atEnd ? onDeckClick : undefined}
     >
-      {deck.length > 0 ? (
+      {deckHasCards ? (
         <Card
-          card={deck[deck.length - 1]}
+          card={{ id: 'deck-back', suit: 'spades', rank: 'A', faceUp: false, color: 'black' }}
           onClick={onDeckClick}
           isSelectable={true}
           cardBackDesign={cardBackDesign}
         />
-      ) : waste.length > 0 ? (
+      ) : atEnd ? (
         <div className="w-full h-full bg-game-felt-light rounded-lg flex items-center justify-center">
           <div className="w-7 h-7 sm:w-9 sm:h-9 lg:w-12 lg:h-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
             <span className="text-sm sm:text-base lg:text-lg text-muted-foreground">↻</span>

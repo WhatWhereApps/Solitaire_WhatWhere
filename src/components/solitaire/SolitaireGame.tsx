@@ -34,7 +34,11 @@ export const SolitaireGame = () => {
     drawFromDeck, 
     moveCard, 
     selectCard, 
-    restartGame 
+    restartGame,
+    wasteCard,
+    deckHasCards,
+    atEnd,
+    atStart,
   } = useSolitaire();
 
   const [dragState, setDragState] = useState({
@@ -245,6 +249,9 @@ export const SolitaireGame = () => {
           dragState={dragState}
           cardBackDesign={settings.cardBackDesign}
           handPreference={settings.handPreference}
+          wasteCard={wasteCard}
+          deckHasCards={deckHasCards}
+          atEnd={atEnd}
         />
       </div>
 
