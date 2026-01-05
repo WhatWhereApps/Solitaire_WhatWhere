@@ -133,13 +133,13 @@ export const GameBoard = ({
     <div
       className={cn(
         "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-dashed transition-all duration-300",
-        deckHasCards 
-          ? "border-transparent cursor-pointer" 
-          : atEnd 
+        deckHasCards
+          ? "border-transparent cursor-pointer"
+          : atEnd
             ? "border-border bg-game-felt-light hover:bg-muted/50 cursor-pointer"
-            : "border-border bg-game-felt-light cursor-not-allowed opacity-50"
+            : "border-border bg-game-felt-light hover:bg-muted/50 cursor-pointer"
       )}
-      onClick={deckHasCards || atEnd ? onDeckClick : undefined}
+      onClick={onDeckClick}
     >
       {deckHasCards ? (
         <Card

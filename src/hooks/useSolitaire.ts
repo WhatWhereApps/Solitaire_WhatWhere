@@ -133,8 +133,6 @@ export const useSolitaire = () => {
       time: 0,
       isWon: false,
     });
-    
-    toast.success("New game started!");
   }, [createDeck]);
 
   const drawFromDeck = useCallback(() => {
@@ -194,55 +192,64 @@ export const useSolitaire = () => {
 
   // Remove a card from the draw pile linked list
   const removeCardFromDrawPile = (drawPile: DrawPileState, cardId: string): DrawPileState => {
-    // We need to rebuild the list to avoid mutation issues
-    // First, collect all remaining cards
+    const currentNode = drawPile.current;
+    const currentCardId =
+      currentNode === drawPile.head || currentNode === drawPile.tail
+        ? null
+        : currentNode.card?.id ?? null;
+
+    let prevCardIdOfCurrent: string | null = null;
+
     const remainingCards: Card[] = [];
     let node = drawPile.head.next;
-    let currentIndex = -1;
-    let index = 0;
-    
+    let prevCardId: string | null = null;
+
     while (node && node !== drawPile.tail) {
-      if (node.card && node.card.id !== cardId) {
-        remainingCards.push(node.card);
+      const nodeCardId = node.card?.id ?? null;
+
+      if (node === currentNode) {
+        prevCardIdOfCurrent = prevCardId;
       }
-      if (node === drawPile.current) {
-        currentIndex = index;
+
+      if (nodeCardId && nodeCardId !== cardId) {
+        // Keep draw-pile invariant: stored cards are face down.
+        remainingCards.push({ ...node.card!, faceUp: false });
+        prevCardId = nodeCardId;
       }
-      if (node.card?.id === cardId && node === drawPile.current) {
-        // We're removing the current card, move index back
-        currentIndex = Math.max(0, index - 1);
-      }
-      index++;
+
       node = node.next;
     }
-    
+
+    // If we removed the current (waste) card, set current to the previous card (or head).
+    const desiredCurrentCardId = currentCardId === cardId ? prevCardIdOfCurrent : currentCardId;
+
     // Rebuild the list
     const newHead: DrawPileNode = { card: null, next: null };
-    let currentNode = newHead;
-    let newCurrent = newHead;
-    let nodeIndex = 0;
-    
+    let cursor = newHead;
+    let newCurrent: DrawPileNode = newHead;
+
     for (const card of remainingCards) {
       const newNode: DrawPileNode = { card, next: null };
-      currentNode.next = newNode;
-      currentNode = newNode;
-      
-      // Set new current position (keeping same logical position)
-      if (nodeIndex === currentIndex - 1) {
+      cursor.next = newNode;
+      cursor = newNode;
+
+      if (desiredCurrentCardId && card.id === desiredCurrentCardId) {
         newCurrent = newNode;
       }
-      nodeIndex++;
     }
-    
+
     const newTail: DrawPileNode = { card: null, next: null };
-    currentNode.next = newTail;
+    cursor.next = newTail;
     newTail.next = newHead;
-    
-    // If current was at head position, stay at head
-    if (currentIndex <= 0) {
+
+    // Preserve the "at start" / "at end" empty nodes when applicable.
+    if (!desiredCurrentCardId) {
       newCurrent = newHead;
     }
-    
+    if (currentNode === drawPile.tail) {
+      newCurrent = newTail;
+    }
+
     return {
       head: newHead,
       current: newCurrent,
