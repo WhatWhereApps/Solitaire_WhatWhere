@@ -222,7 +222,7 @@ export const SolitaireGame = () => {
   }
 
   return (
-    <div className="min-h-screen bg-game-felt p-3 sm:p-6 pt-12 sm:pt-8 space-y-6 sm:space-y-8">
+    <div className="h-screen bg-game-felt p-2 sm:p-4 pt-10 sm:pt-6 flex flex-col overflow-hidden">
       <GameHeader
         score={gameState.score}
         moves={gameState.moves}
@@ -233,18 +233,20 @@ export const SolitaireGame = () => {
         isWon={gameState.isWon}
       />
       
-      <GameBoard
-        gameState={gameState}
-        onCardClick={handleCardClick}
-        onEmptyPileClick={handleEmptyPileClick}
-        onDeckClick={drawFromDeck}
-        onCardDrop={handleCardDrop}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        dragState={dragState}
-        cardBackDesign={settings.cardBackDesign}
-        handPreference={settings.handPreference}
-      />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <GameBoard
+          gameState={gameState}
+          onCardClick={handleCardClick}
+          onEmptyPileClick={handleEmptyPileClick}
+          onDeckClick={drawFromDeck}
+          onCardDrop={handleCardDrop}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          dragState={dragState}
+          cardBackDesign={settings.cardBackDesign}
+          handPreference={settings.handPreference}
+        />
+      </div>
 
       {gameState.isWon && (
         <VictoryScreen

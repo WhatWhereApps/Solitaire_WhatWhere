@@ -158,7 +158,7 @@ export const GameBoard = ({
   );
 
   return (
-    <div className="w-full mx-auto space-y-4 sm:space-y-6 lg:space-y-8 px-1 sm:px-2 lg:px-4">
+    <div className="w-full h-full mx-auto flex flex-col gap-3 sm:gap-4 lg:gap-6 px-1 sm:px-2 lg:px-4">
       {/* Top Row: Layout changes based on hand preference */}
       <div className="flex flex-wrap justify-center sm:justify-between items-center gap-2 sm:gap-4">
         <FoundationsPile />
@@ -166,12 +166,12 @@ export const GameBoard = ({
       </div>
 
       {/* Bottom Row: Tableau */}
-      <div className="grid grid-cols-7 gap-px sm:gap-1 lg:gap-2 justify-center w-full mt-4 sm:mt-6 lg:mt-8">
+      <div className="flex-1 min-h-0 grid grid-cols-7 gap-px sm:gap-1 lg:gap-2 justify-center w-full">
         {tableau.map((pile, pileIndex) => (
           <div 
             key={pileIndex} 
             className={cn(
-              "flex flex-col relative min-h-22 sm:min-h-26 lg:min-h-40 transition-all duration-300",
+              "flex flex-col relative overflow-hidden transition-all duration-300",
               dragState.isDragging && "hover:bg-muted/10 rounded-lg"
             )}
             onDragOver={handleDragOver}
@@ -215,7 +215,7 @@ export const GameBoard = ({
                   isDragging={isDragging}
                   cardBackDesign={cardBackDesign}
                   style={{
-                    marginTop: cardIndex > 0 ? '-32px' : '0', // Less overlap = more space between cards
+                    marginTop: cardIndex > 0 ? '-38px' : '0',
                     zIndex: cardIndex,
                   }}
                   className={cn(
