@@ -9,13 +9,11 @@ import { VictoryScreen } from './VictoryScreen';
 import { SettingsDialog } from './SettingsDialog';
 import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { toast } from 'sonner';
 import { useLanguage } from '@/i18n';
 
 type Screen = 'home' | 'loading' | 'game';
 
 const LOADING_SHOWN_KEY = 'whatwhere_loading_shown';
-const HAND_TIP_SHOWN_KEY = 'whatwhere_hand_tip_shown';
 
 export const SolitaireGame = () => {
   // Check if this is the first app launch
@@ -94,18 +92,6 @@ export const SolitaireGame = () => {
   const handleNewGame = () => {
     dealCards();
     setCurrentScreen('game');
-    
-    // Show one-time tip about hand preference
-    const hasSeenHandTip = localStorage.getItem(HAND_TIP_SHOWN_KEY) === 'true';
-    if (!hasSeenHandTip) {
-      localStorage.setItem(HAND_TIP_SHOWN_KEY, 'true');
-      setTimeout(() => {
-        toast(t.handTipTitle, {
-          description: t.handTipDescription,
-          duration: 5000,
-        });
-      }, 1000);
-    }
   };
 
   const handleBackToHome = () => {
