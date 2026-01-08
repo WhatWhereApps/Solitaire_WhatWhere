@@ -34,8 +34,7 @@ export const HomeScreen = ({
             <span className="text-2xl sm:text-3xl md:text-4xl">♠️</span>
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2 tracking-tight">{t.appTitle}</h1>
-        <p className="text-emerald-200 text-xs sm:text-sm">{t.subtitle}</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">Solitaire</h1>
       </div>
 
       {/* Menu Buttons */}
@@ -88,7 +87,7 @@ export const HomeScreen = ({
 
       {/* Footer */}
       <div className="mt-4 sm:mt-6 md:mt-8 flex-shrink-0">
-        <p className="text-emerald-400/60 text-xs">{t.version}</p>
+        <p className="text-emerald-300/80 text-sm font-medium tracking-widest uppercase">WhatWhereApps</p>
       </div>
 
       {/* Settings Dialog */}
