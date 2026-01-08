@@ -3,7 +3,6 @@ import { useSolitaire } from '@/hooks/useSolitaire';
 import { useGameSettings } from '@/hooks/useGameSettings';
 import { GameHeader } from './GameHeader';
 import { GameBoard } from './GameBoard';
-import { LoadingScreen } from './LoadingScreen';
 import { HomeScreen } from './HomeScreen';
 import { VictoryScreen } from './VictoryScreen';
 import { SettingsDialog } from './SettingsDialog';
@@ -11,11 +10,11 @@ import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { useLanguage } from '@/i18n';
 
-type Screen = 'home' | 'loading' | 'game';
+type Screen = 'home' | 'game';
 
 export const SolitaireGame = () => {
-  // Always show loading screen on app open (cold start)
-  const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
+  // Native launch screen handles splash, go straight to home
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -79,10 +78,6 @@ export const SolitaireGame = () => {
       }
     }
   }, [settings.vibrationIntensity]);
-
-  const handleLoadingComplete = () => {
-    setCurrentScreen('home');
-  };
 
   const handleNewGame = () => {
     dealCards();
@@ -200,10 +195,6 @@ export const SolitaireGame = () => {
         onUpdateSetting={updateSetting}
       />
     );
-  }
-
-  if (currentScreen === 'loading') {
-    return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
 
   return (
