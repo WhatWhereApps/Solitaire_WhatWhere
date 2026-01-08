@@ -55,6 +55,18 @@ All colors MUST be HSL.
     --card-highlight: 142 86% 28%;
     --victory-glow: 60 100% 70%;
     
+    /* Card back design colors */
+    --card-back-classic-blue: 220 70% 35%;
+    --card-back-classic-blue-light: 220 70% 45%;
+    --card-back-classic-red: 0 70% 35%;
+    --card-back-classic-red-light: 0 70% 45%;
+    --card-back-royal-purple: 270 70% 35%;
+    --card-back-royal-purple-light: 270 70% 45%;
+    --card-back-forest-green: 150 70% 25%;
+    --card-back-forest-green-light: 150 70% 35%;
+    --card-back-midnight: 220 20% 20%;
+    --card-back-midnight-light: 220 20% 30%;
+    
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);

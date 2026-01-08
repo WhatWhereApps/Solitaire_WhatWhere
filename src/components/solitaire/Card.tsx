@@ -65,17 +65,17 @@ export const Card = ({
         draggable={isSelectable}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        style={style}
+        style={{
+          ...style,
+          background: `linear-gradient(to bottom right, hsl(var(--${backDesign.cssVar})), hsl(var(--${backDesign.cssVar}-light)))`,
+        }}
       >
-        <div className={cn(
-          "absolute inset-0 bg-gradient-to-br",
-          backDesign.gradient
-        )} />
-        <div className={cn(
-          "absolute inset-2 rounded border",
-          backDesign.accent,
-          "bg-black/10"
-        )} />
+        <div 
+          className="absolute inset-2 rounded border bg-black/10"
+          style={{
+            borderColor: `hsl(var(--${backDesign.cssVar}-light) / 0.3)`,
+          }}
+        />
         <div className="text-white/60 text-sm sm:text-base font-bold z-10">♠</div>
       </div>
     );

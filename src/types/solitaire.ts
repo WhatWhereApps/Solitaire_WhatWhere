@@ -28,6 +28,7 @@ export interface GameState {
   tableau: Card[][];
   selectedCard: Card | null;
   selectedPile: { type: string; index?: number } | null;
+  cardIndex?: number; // Index of selected card within its pile
   moves: number;
   score: number;
   time: number;

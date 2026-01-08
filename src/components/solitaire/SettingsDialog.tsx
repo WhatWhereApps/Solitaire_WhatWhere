@@ -175,12 +175,14 @@ export const SettingsDialog = ({
                       onClick={() => onUpdateSetting('cardBackDesign', key)}
                       className={cn(
                         "w-full aspect-[2/3] rounded-lg transition-all duration-200",
-                        `bg-gradient-to-br ${design.gradient}`,
                         "border-2",
                         settings.cardBackDesign === key
                           ? "ring-2 ring-emerald-400 border-emerald-400 scale-105"
-                          : `${design.accent} hover:scale-105`
+                          : "border-white/20 hover:scale-105"
                       )}
+                      style={{
+                        background: `linear-gradient(to bottom right, hsl(var(--${design.cssVar})), hsl(var(--${design.cssVar}-light)))`,
+                      }}
                     >
                       <div className="h-full w-full flex items-center justify-center">
                         <span className="text-white/50 text-xs">♠</span>
