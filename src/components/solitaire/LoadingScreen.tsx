@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLanguage } from '@/i18n';
 
 interface LoadingScreenProps {
@@ -6,22 +6,11 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
-  const [progress, setProgress] = useState(0);
   const { t } = useLanguage();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 500);
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, 50);
-
-    return () => clearInterval(timer);
+    const timer = setTimeout(onComplete, 2500);
+    return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
@@ -37,16 +26,11 @@ export const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
           WhatWhere Apps
         </div>
         
-        {/* Loading Bar */}
-        <div className="w-64 sm:w-80 mx-auto mt-12">
-          <div className="w-full bg-white/20 rounded-full h-2">
-            <div 
-              className="bg-white h-2 rounded-full transition-all duration-100 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="text-white/80 text-sm mt-2 font-orbitron">
-            {t.loading} {progress}%
+        {/* Loading Spinner */}
+        <div className="mt-12 flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="text-white/80 text-sm font-orbitron">
+            {t.loading}
           </div>
         </div>
       </div>
