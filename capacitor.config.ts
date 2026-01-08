@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 2500,
       launchAutoHide: true,
-      backgroundColor: '#22d3ee', // cyan-400 to match your branding
+      backgroundColor: '#064e3b', // emerald-900
       showSpinner: true,
       spinnerColor: '#ffffff',
       splashFullScreen: true,
@@ -16,14 +16,14 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#22d3ee',
+      backgroundColor: '#064e3b',
     },
   },
   ios: {
     contentInset: 'automatic',
   },
   android: {
-    backgroundColor: '#22d3ee',
+    backgroundColor: '#064e3b',
   },
 };
 
