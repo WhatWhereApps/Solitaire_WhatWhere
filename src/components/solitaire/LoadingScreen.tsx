@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 interface LoadingScreenProps {
   onLoadingComplete: () => void;
@@ -29,58 +28,38 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   }, [onLoadingComplete]);
 
   return (
-    <motion.div 
-      className="fixed inset-0 bg-gradient-to-b from-emerald-800 to-emerald-950 flex flex-col items-center justify-center z-50"
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="fixed inset-0 bg-gradient-to-b from-emerald-800 to-emerald-950 flex flex-col items-center justify-center z-50 animate-fade-in [animation-fill-mode:forwards]">
+
       {/* Card Icon */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6"
-      >
+      <div className="mb-6 opacity-0 animate-scale-in [animation-fill-mode:forwards]">
+
         <div className="w-20 h-28 bg-white rounded-xl shadow-2xl flex items-center justify-center">
           <span className="text-4xl text-emerald-600">♠</span>
         </div>
-      </motion.div>
+      </div>
 
       {/* Title */}
-      <motion.h1
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="text-5xl font-bold text-white mb-8 tracking-wide"
-      >
+      <h1 className="text-5xl font-bold text-white mb-8 tracking-wide opacity-0 animate-fade-in [animation-delay:200ms] [animation-fill-mode:forwards]">
+
         Solitaire
-      </motion.h1>
+      </h1>
 
       {/* Loading Bar Container */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="w-64 mb-12"
-      >
+      <div className="w-64 mb-12 opacity-0 animate-fade-in [animation-delay:400ms] [animation-fill-mode:forwards]">
+
         <div className="h-2 bg-emerald-900/50 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full"
+          <div
+            className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-[width] duration-100"
             style={{ width: `${progress}%` }}
-            transition={{ duration: 0.1 }}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Company Name */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-emerald-300/80 text-sm font-medium tracking-widest uppercase"
-      >
+      <p className="text-emerald-300/80 text-sm font-medium tracking-widest uppercase opacity-0 animate-fade-in [animation-delay:600ms] [animation-fill-mode:forwards]">
+
         WhatWhereApps
-      </motion.p>
-    </motion.div>
+      </p>
+    </div>
   );
 };
