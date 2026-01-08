@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/i18n';
+import { formatTime } from '@/lib/formatTime';
 
 interface ConfettiPiece {
   id: number;
@@ -35,12 +36,6 @@ const CONFETTI_COLORS = [
 export const VictoryScreen = ({ score, moves, time, onNewGame, onHome }: VictoryScreenProps) => {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const { t } = useLanguage();
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   useEffect(() => {
     const pieces: ConfettiPiece[] = [];

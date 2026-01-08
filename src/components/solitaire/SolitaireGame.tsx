@@ -1,15 +1,13 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useSolitaire } from '@/hooks/useSolitaire';
 import { useGameSettings } from '@/hooks/useGameSettings';
 import { GameHeader } from './GameHeader';
 import { GameBoard } from './GameBoard';
 import { HomeScreen } from './HomeScreen';
 import { VictoryScreen } from './VictoryScreen';
-import { SettingsDialog } from './SettingsDialog';
 import { LoadingScreen } from './LoadingScreen';
 import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { useLanguage } from '@/i18n';
 
 type Screen = 'loading' | 'home' | 'game';
 
@@ -17,10 +15,8 @@ export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const { settings, updateSetting } = useGameSettings();
-  const { t } = useLanguage();
   
   const { 
     gameState, 
@@ -113,10 +109,9 @@ export const SolitaireGame = () => {
       }
 
       // Try to move selected card to clicked location
-      const { selectedPile } = gameState;
+      const { selectedPile, cardIndex: cardIdx } = gameState;
       if (selectedPile) {
         const fromIndex = selectedPile.index;
-        const cardIdx = (gameState as any).cardIndex;
         
         // Try to move to this pile
         if (pileType === 'foundation' && pileIndex !== undefined) {
@@ -140,9 +135,8 @@ export const SolitaireGame = () => {
 
   const handleEmptyPileClick = (pileType: string, pileIndex?: number) => {
     if (gameState.selectedCard && gameState.selectedPile) {
-      const { selectedPile } = gameState;
+      const { selectedPile, cardIndex: cardIdx } = gameState;
       const fromIndex = selectedPile.index;
-      const cardIdx = (gameState as any).cardIndex;
       
       triggerHaptic('light');
 
@@ -245,12 +239,6 @@ export const SolitaireGame = () => {
         />
       )}
 
-      <SettingsDialog
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        settings={settings}
-        onUpdateSetting={updateSetting}
-      />
     </div>
   );
 };

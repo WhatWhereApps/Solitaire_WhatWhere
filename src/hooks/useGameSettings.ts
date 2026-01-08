@@ -59,31 +59,26 @@ export const useGameSettings = () => {
   };
 };
 
-// Card back design configurations
-export const cardBackDesigns: Record<CardBackDesign, { name: string; gradient: string; accent: string }> = {
+// Card back design configurations using CSS variables
+export const cardBackDesigns: Record<CardBackDesign, { name: string; cssVar: string }> = {
   'classic-blue': {
     name: 'Classic Blue',
-    gradient: 'from-blue-900 to-blue-700',
-    accent: 'border-blue-400/30',
+    cssVar: 'card-back-classic-blue',
   },
   'classic-red': {
     name: 'Classic Red',
-    gradient: 'from-red-900 to-red-700',
-    accent: 'border-red-400/30',
+    cssVar: 'card-back-classic-red',
   },
   'royal-purple': {
     name: 'Royal Purple',
-    gradient: 'from-purple-900 to-purple-700',
-    accent: 'border-purple-400/30',
+    cssVar: 'card-back-royal-purple',
   },
   'forest-green': {
     name: 'Forest Green',
-    gradient: 'from-emerald-900 to-emerald-700',
-    accent: 'border-emerald-400/30',
+    cssVar: 'card-back-forest-green',
   },
   'midnight': {
     name: 'Midnight',
-    gradient: 'from-slate-900 to-slate-700',
-    accent: 'border-slate-400/30',
+    cssVar: 'card-back-midnight',
   },
 };

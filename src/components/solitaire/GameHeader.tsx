@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Trophy, Clock, Target, Home } from 'lucide-react';
 import { useLanguage } from '@/i18n';
+import { formatTime } from '@/lib/formatTime';
 
 interface GameHeaderProps {
   score: number;
@@ -14,12 +15,6 @@ interface GameHeaderProps {
 
 export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, isWon }: GameHeaderProps) => {
   const { t } = useLanguage();
-  
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   return (
     <div className="flex flex-col gap-2 p-3 sm:p-5 pt-safe-area-inset-top mt-2 sm:mt-4">
