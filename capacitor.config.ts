@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.solitaire.master',
-  appName: 'Solitaire Master',
+  appName: 'Solitaire',
   webDir: 'dist',
   plugins: {
     SplashScreen: {
