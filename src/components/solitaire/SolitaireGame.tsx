@@ -6,15 +6,15 @@ import { GameBoard } from './GameBoard';
 import { HomeScreen } from './HomeScreen';
 import { VictoryScreen } from './VictoryScreen';
 import { SettingsDialog } from './SettingsDialog';
+import { LoadingScreen } from './LoadingScreen';
 import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { useLanguage } from '@/i18n';
 
-type Screen = 'home' | 'game';
+type Screen = 'loading' | 'home' | 'game';
 
 export const SolitaireGame = () => {
-  // Native launch screen handles splash, go straight to home
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -186,6 +186,14 @@ export const SolitaireGame = () => {
     // Reset drag state
     handleDragEnd();
   };
+
+  const handleLoadingComplete = useCallback(() => {
+    setCurrentScreen('home');
+  }, []);
+
+  if (currentScreen === 'loading') {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
 
   if (currentScreen === 'home') {
     return (
