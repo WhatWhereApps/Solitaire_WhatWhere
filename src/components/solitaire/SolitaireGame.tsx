@@ -13,12 +13,9 @@ import { useLanguage } from '@/i18n';
 
 type Screen = 'home' | 'loading' | 'game';
 
-const LOADING_SHOWN_KEY = 'whatwhere_loading_shown';
-
 export const SolitaireGame = () => {
-  // Check if this is the first app launch
-  const hasSeenLoading = localStorage.getItem(LOADING_SHOWN_KEY) === 'true';
-  const [currentScreen, setCurrentScreen] = useState<Screen>(hasSeenLoading ? 'home' : 'loading');
+  // Always show loading screen on app open (cold start)
+  const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -84,8 +81,6 @@ export const SolitaireGame = () => {
   }, [settings.vibrationIntensity]);
 
   const handleLoadingComplete = () => {
-    // Mark loading as shown so it won't appear again
-    localStorage.setItem(LOADING_SHOWN_KEY, 'true');
     setCurrentScreen('home');
   };
 
