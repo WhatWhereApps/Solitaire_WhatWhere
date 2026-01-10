@@ -9,8 +9,7 @@ const config: CapacitorConfig = {
       launchShowDuration: 2500,
       launchAutoHide: true,
       backgroundColor: '#064e3b', // emerald-900
-      showSpinner: true,
-      spinnerColor: '#ffffff',
+      showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
     },
