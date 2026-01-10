@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 interface LoadingScreenProps {
   onLoadingComplete: () => void;
@@ -6,6 +7,11 @@ interface LoadingScreenProps {
 
 export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   useEffect(() => {
+    // Hide Capacitor splash screen when our custom loading screen is ready
+    SplashScreen.hide().catch(() => {
+      // Ignore errors on web (SplashScreen not available)
+    });
+    
     const timer = setTimeout(onLoadingComplete, 2000);
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);
