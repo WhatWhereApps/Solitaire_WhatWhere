@@ -7,12 +7,15 @@ interface LoadingScreenProps {
 
 export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   useEffect(() => {
-    // Hide Capacitor splash screen when our custom loading screen is ready
+    // Hide Capacitor native splash screen immediately so our custom one shows
     SplashScreen.hide().catch(() => {
       // Ignore errors on web (SplashScreen not available)
     });
-    
-    const timer = setTimeout(onLoadingComplete, 2000);
+  }, []);
+
+  useEffect(() => {
+    // Show our custom loading screen for 2.5 seconds
+    const timer = setTimeout(onLoadingComplete, 2500);
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);
 
