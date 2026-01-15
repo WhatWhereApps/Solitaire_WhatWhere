@@ -6,8 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2500,
-      launchAutoHide: true,
+      launchShowDuration: 0,
+      launchAutoHide: false, // We manually hide it when our LoadingScreen is ready
       backgroundColor: '#064e3b', // emerald-900
       showSpinner: false,
       splashFullScreen: true,
