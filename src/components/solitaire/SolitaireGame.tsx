@@ -216,7 +216,10 @@ export const SolitaireGame = () => {
           gameState={gameState}
           onCardClick={handleCardClick}
           onEmptyPileClick={handleEmptyPileClick}
-          onDeckClick={drawFromDeck}
+          onDeckClick={() => {
+            triggerHaptic('light');
+            drawFromDeck();
+          }}
           onCardDrop={handleCardDrop}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}

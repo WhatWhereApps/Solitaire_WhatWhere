@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Home, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import { formatTime } from '@/lib/formatTime';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 
 interface ConfettiPiece {
   id: number;
@@ -38,6 +39,11 @@ export const VictoryScreen = ({ score, moves, time, onNewGame, onHome }: Victory
   const { t } = useLanguage();
 
   useEffect(() => {
+    // Victory haptic feedback
+    Haptics.notification({ type: NotificationType.Success }).catch(() => {
+      // Ignore errors on web
+    });
+
     const pieces: ConfettiPiece[] = [];
     for (let i = 0; i < 100; i++) {
       pieces.push({
