@@ -191,63 +191,78 @@ export const useSolitaire = () => {
   };
 
   // Remove a card from the draw pile linked list
+  // When playing the waste card, we need to show the previously DRAWN card (the one before current in draw order)
   const removeCardFromDrawPile = (drawPile: DrawPileState, cardId: string): DrawPileState => {
     const currentNode = drawPile.current;
-    const currentCardId =
-      currentNode === drawPile.head || currentNode === drawPile.tail
-        ? null
-        : currentNode.card?.id ?? null;
+    const isRemovingCurrent = currentNode.card?.id === cardId;
 
-    let prevCardIdOfCurrent: string | null = null;
-
+    // Collect all remaining cards and track the node BEFORE current
     const remainingCards: Card[] = [];
     let node = drawPile.head.next;
-    let prevCardId: string | null = null;
+    let prevNode: DrawPileNode | null = null;
+    let prevNodeBeforeCurrent: DrawPileNode | null = null;
 
     while (node && node !== drawPile.tail) {
-      const nodeCardId = node.card?.id ?? null;
-
       if (node === currentNode) {
-        prevCardIdOfCurrent = prevCardId;
+        prevNodeBeforeCurrent = prevNode;
       }
 
-      if (nodeCardId && nodeCardId !== cardId) {
-        // Keep draw-pile invariant: stored cards are face down.
-        remainingCards.push({ ...node.card!, faceUp: false });
-        prevCardId = nodeCardId;
+      if (node.card && node.card.id !== cardId) {
+        remainingCards.push({ ...node.card, faceUp: false });
       }
 
+      prevNode = node;
       node = node.next;
     }
-
-    // If we removed the current (waste) card, set current to the previous card (or head).
-    const desiredCurrentCardId = currentCardId === cardId ? prevCardIdOfCurrent : currentCardId;
 
     // Rebuild the list
     const newHead: DrawPileNode = { card: null, next: null };
     let cursor = newHead;
-    let newCurrent: DrawPileNode = newHead;
+    
+    // Build a map from old card id to new node for setting current
+    const cardIdToNode: Map<string, DrawPileNode> = new Map();
 
     for (const card of remainingCards) {
       const newNode: DrawPileNode = { card, next: null };
       cursor.next = newNode;
       cursor = newNode;
-
-      if (desiredCurrentCardId && card.id === desiredCurrentCardId) {
-        newCurrent = newNode;
-      }
+      cardIdToNode.set(card.id, newNode);
     }
 
     const newTail: DrawPileNode = { card: null, next: null };
     cursor.next = newTail;
     newTail.next = newHead;
 
-    // Preserve the "at start" / "at end" empty nodes when applicable.
-    if (!desiredCurrentCardId) {
+    // Determine new current position
+    let newCurrent: DrawPileNode = newHead;
+
+    if (currentNode === drawPile.head) {
+      // Was at start, stay at start
       newCurrent = newHead;
-    }
-    if (currentNode === drawPile.tail) {
+    } else if (currentNode === drawPile.tail) {
+      // Was at end, stay at end
       newCurrent = newTail;
+    } else if (isRemovingCurrent) {
+      // We're removing the current waste card
+      // Show the previously drawn card (the card that was current before we drew to this one)
+      if (prevNodeBeforeCurrent && prevNodeBeforeCurrent !== drawPile.head && prevNodeBeforeCurrent.card) {
+        const prevCardId = prevNodeBeforeCurrent.card.id;
+        if (prevCardId !== cardId && cardIdToNode.has(prevCardId)) {
+          newCurrent = cardIdToNode.get(prevCardId)!;
+        } else {
+          // Previous card was also removed or doesn't exist, go to head
+          newCurrent = newHead;
+        }
+      } else {
+        // No previous drawn card, go back to head (no waste card shown)
+        newCurrent = newHead;
+      }
+    } else {
+      // Not removing current, keep current pointing to same card
+      const currentCardId = currentNode.card?.id;
+      if (currentCardId && cardIdToNode.has(currentCardId)) {
+        newCurrent = cardIdToNode.get(currentCardId)!;
+      }
     }
 
     return {
