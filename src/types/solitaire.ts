@@ -9,17 +9,25 @@ export interface Card {
   color: 'red' | 'black';
 }
 
-// Linked list node for draw pile
+/**
+ * Linear (singly) linked-list node. Used for both the face-down deck
+ * and the face-up waste. `next` points toward the bottom of the stack;
+ * the list head is always the top card (next to interact with).
+ */
 export interface DrawPileNode {
-  card: Card | null; // null represents empty position (start/end)
+  card: Card;
   next: DrawPileNode | null;
 }
 
-// Draw pile state - cycles through a linked list
+/**
+ * Draw pile as two linear linked lists:
+ *  - deck:  face-down cards, head = top card ready to be drawn
+ *  - waste: face-up cards,   head = currently visible waste card
+ * When the deck runs out, the waste is reversed back into the deck.
+ */
 export interface DrawPileState {
-  head: DrawPileNode; // Start of list (always empty)
-  current: DrawPileNode; // Current position in the cycle
-  tail: DrawPileNode; // End of list (always empty)
+  deck: DrawPileNode | null;
+  waste: DrawPileNode | null;
 }
 
 export interface GameState {
@@ -28,7 +36,7 @@ export interface GameState {
   tableau: Card[][];
   selectedCard: Card | null;
   selectedPile: { type: string; index?: number } | null;
-  cardIndex?: number; // Index of selected card within its pile
+  cardIndex?: number;
   moves: number;
   score: number;
   time: number;
