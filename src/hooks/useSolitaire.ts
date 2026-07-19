@@ -141,6 +141,7 @@ export const useSolitaire = () => {
       time: 0,
       isWon: false,
     });
+    setHistory([]);
   }, [createDeck]);
 
   /**
@@ -152,7 +153,7 @@ export const useSolitaire = () => {
       const { deck, waste } = prev.drawPile;
 
       if (deck) {
-        // Pop deck head, push face-up onto waste head
+        pushHistory(prev);
         const drawn: Card = { ...deck.card, faceUp: true };
         return {
           ...prev,
@@ -165,13 +166,14 @@ export const useSolitaire = () => {
       }
 
       if (waste) {
-        // Recycle: reverse waste back into deck (all face-down), clear waste
-        const recycled = reverseList(waste);
-        // Flip all recycled cards face-down
-        let node = recycled;
-        while (node) {
-          node.card = { ...node.card, faceUp: false };
-          node = node.next;
+        pushHistory(prev);
+        // Recycle: reverse waste back into deck, flipping each card face-down.
+        // Build a new list without mutating existing nodes (history relies on immutability).
+        let recycled: DrawPileNode | null = null;
+        let curr: DrawPileNode | null = waste;
+        while (curr) {
+          recycled = { card: { ...curr.card, faceUp: false }, next: recycled };
+          curr = curr.next;
         }
         return {
           ...prev,
@@ -182,7 +184,7 @@ export const useSolitaire = () => {
 
       return prev;
     });
-  }, []);
+  }, [pushHistory]);
 
   const moveCard = useCallback((
     fromType: string,
