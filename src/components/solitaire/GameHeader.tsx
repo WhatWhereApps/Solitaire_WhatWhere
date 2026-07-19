@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Clock, Target, Home } from 'lucide-react';
+import { RefreshCw, Trophy, Clock, Target, Home, Undo2 } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import { formatTime } from '@/lib/formatTime';
 
@@ -10,10 +10,12 @@ interface GameHeaderProps {
   onNewGame: () => void;
   onRestart: () => void;
   onHome: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
   isWon: boolean;
 }
 
-export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, isWon }: GameHeaderProps) => {
+export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, onUndo, canUndo, isWon }: GameHeaderProps) => {
   const { t } = useLanguage();
 
   return (
@@ -33,6 +35,18 @@ export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, i
 
         {/* Right side buttons */}
         <div className="flex items-center gap-1 sm:gap-3">
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onUndo}
+          disabled={!canUndo}
+          className="hover:bg-primary hover:text-primary-foreground gap-1.5 text-sm sm:text-base px-2.5 sm:px-4 disabled:opacity-40"
+          aria-label="Undo"
+        >
+          <Undo2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base">Undo</span>
+        </Button>
 
         <Button
           variant="outline"

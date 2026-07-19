@@ -25,6 +25,8 @@ export const SolitaireGame = () => {
     moveCard, 
     selectCard, 
     restartGame,
+    undo,
+    canUndo,
     wasteCard,
     deckHasCards,
     atEnd,
@@ -208,6 +210,8 @@ export const SolitaireGame = () => {
         onNewGame={handleNewGame}
         onRestart={restartGame}
         onHome={handleBackToHome}
+        onUndo={() => { triggerHaptic('medium'); undo(); }}
+        canUndo={canUndo}
         isWon={gameState.isWon}
       />
       

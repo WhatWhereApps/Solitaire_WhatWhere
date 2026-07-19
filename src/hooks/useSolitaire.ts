@@ -60,6 +60,8 @@ const canMoveToTableau = (card: Card, tableau: Card[]): boolean => {
 
 // ---------- Hook ----------
 
+const MAX_HISTORY = 50;
+
 export const useSolitaire = () => {
   const [gameState, setGameState] = useState<GameState>(() => ({
     drawPile: emptyDrawPile(),
@@ -72,6 +74,26 @@ export const useSolitaire = () => {
     time: 0,
     isWon: false,
   }));
+  const [history, setHistory] = useState<GameState[]>([]);
+
+  /** Snapshot current state (deep enough for undo) before a mutating action. */
+  const snapshot = useCallback((s: GameState): GameState => ({
+    ...s,
+    drawPile: { deck: s.drawPile.deck, waste: s.drawPile.waste }, // linked lists are immutable in our flow
+    foundations: s.foundations.map(f => [...f]),
+    tableau: s.tableau.map(t => t.map(c => ({ ...c }))),
+    selectedCard: null,
+    selectedPile: null,
+    cardIndex: undefined,
+  }), []);
+
+  const pushHistory = useCallback((s: GameState) => {
+    setHistory(h => {
+      const next = [...h, snapshot(s)];
+      if (next.length > MAX_HISTORY) next.shift();
+      return next;
+    });
+  }, [snapshot]);
 
   const createDeck = useCallback((): Card[] => {
     const deck: Card[] = [];
@@ -119,6 +141,7 @@ export const useSolitaire = () => {
       time: 0,
       isWon: false,
     });
+    setHistory([]);
   }, [createDeck]);
 
   /**
@@ -130,7 +153,7 @@ export const useSolitaire = () => {
       const { deck, waste } = prev.drawPile;
 
       if (deck) {
-        // Pop deck head, push face-up onto waste head
+        pushHistory(prev);
         const drawn: Card = { ...deck.card, faceUp: true };
         return {
           ...prev,
@@ -143,13 +166,14 @@ export const useSolitaire = () => {
       }
 
       if (waste) {
-        // Recycle: reverse waste back into deck (all face-down), clear waste
-        const recycled = reverseList(waste);
-        // Flip all recycled cards face-down
-        let node = recycled;
-        while (node) {
-          node.card = { ...node.card, faceUp: false };
-          node = node.next;
+        pushHistory(prev);
+        // Recycle: reverse waste back into deck, flipping each card face-down.
+        // Build a new list without mutating existing nodes (history relies on immutability).
+        let recycled: DrawPileNode | null = null;
+        let curr: DrawPileNode | null = waste;
+        while (curr) {
+          recycled = { card: { ...curr.card, faceUp: false }, next: recycled };
+          curr = curr.next;
         }
         return {
           ...prev,
@@ -160,7 +184,7 @@ export const useSolitaire = () => {
 
       return prev;
     });
-  }, []);
+  }, [pushHistory]);
 
   const moveCard = useCallback((
     fromType: string,
@@ -172,6 +196,8 @@ export const useSolitaire = () => {
     setGameState(prev => {
       const newState: GameState = { ...prev };
       let cardsToMove: Card[] = [];
+      let didSnapshot = false;
+      const snap = () => { if (!didSnapshot) { pushHistory(prev); didSnapshot = true; } };
 
       // ---- Gather cards from source ----
       if (fromType === 'waste') {
@@ -196,6 +222,7 @@ export const useSolitaire = () => {
         canMove = canMoveToTableau(firstCard, prev.tableau[toIndex]);
       }
       if (!canMove) return prev;
+      snap();
 
       // ---- Remove from source ----
       if (fromType === 'waste' && prev.drawPile.waste) {
@@ -246,6 +273,15 @@ export const useSolitaire = () => {
 
       return newState;
     });
+  }, [pushHistory]);
+
+  const undo = useCallback(() => {
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setGameState(current => ({ ...prev, time: current.time }));
+      return h.slice(0, -1);
+    });
   }, []);
 
   const selectCard = useCallback((card: Card, pileType: string, pileIndex?: number, cardIndex?: number) => {
@@ -295,6 +331,8 @@ export const useSolitaire = () => {
     moveCard,
     selectCard,
     restartGame,
+    undo,
+    canUndo: history.length > 0,
     wasteCard,
     deckHasCards,
     atEnd,
