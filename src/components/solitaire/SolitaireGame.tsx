@@ -25,6 +25,8 @@ export const SolitaireGame = () => {
     moveCard, 
     selectCard, 
     restartGame,
+    undo,
+    canUndo,
     wasteCard,
     deckHasCards,
     atEnd,
