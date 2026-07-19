@@ -60,6 +60,8 @@ const canMoveToTableau = (card: Card, tableau: Card[]): boolean => {
 
 // ---------- Hook ----------
 
+const MAX_HISTORY = 50;
+
 export const useSolitaire = () => {
   const [gameState, setGameState] = useState<GameState>(() => ({
     drawPile: emptyDrawPile(),
@@ -72,6 +74,26 @@ export const useSolitaire = () => {
     time: 0,
     isWon: false,
   }));
+  const [history, setHistory] = useState<GameState[]>([]);
+
+  /** Snapshot current state (deep enough for undo) before a mutating action. */
+  const snapshot = useCallback((s: GameState): GameState => ({
+    ...s,
+    drawPile: { deck: s.drawPile.deck, waste: s.drawPile.waste }, // linked lists are immutable in our flow
+    foundations: s.foundations.map(f => [...f]),
+    tableau: s.tableau.map(t => t.map(c => ({ ...c }))),
+    selectedCard: null,
+    selectedPile: null,
+    cardIndex: undefined,
+  }), []);
+
+  const pushHistory = useCallback((s: GameState) => {
+    setHistory(h => {
+      const next = [...h, snapshot(s)];
+      if (next.length > MAX_HISTORY) next.shift();
+      return next;
+    });
+  }, [snapshot]);
 
   const createDeck = useCallback((): Card[] => {
     const deck: Card[] = [];
