@@ -273,6 +273,15 @@ export const useSolitaire = () => {
 
       return newState;
     });
+  }, [pushHistory]);
+
+  const undo = useCallback(() => {
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setGameState(current => ({ ...prev, time: current.time }));
+      return h.slice(0, -1);
+    });
   }, []);
 
   const selectCard = useCallback((card: Card, pileType: string, pileIndex?: number, cardIndex?: number) => {
