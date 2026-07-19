@@ -222,6 +222,7 @@ export const useSolitaire = () => {
         canMove = canMoveToTableau(firstCard, prev.tableau[toIndex]);
       }
       if (!canMove) return prev;
+      snap();
 
       // ---- Remove from source ----
       if (fromType === 'waste' && prev.drawPile.waste) {
