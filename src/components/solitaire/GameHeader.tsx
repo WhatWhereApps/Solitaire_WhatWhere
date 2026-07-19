@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, Clock, Target, Home } from 'lucide-react';
+import { RefreshCw, Trophy, Clock, Target, Home, Undo2 } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import { formatTime } from '@/lib/formatTime';
 
@@ -10,10 +10,12 @@ interface GameHeaderProps {
   onNewGame: () => void;
   onRestart: () => void;
   onHome: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
   isWon: boolean;
 }
 
-export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, isWon }: GameHeaderProps) => {
+export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, onUndo, canUndo, isWon }: GameHeaderProps) => {
   const { t } = useLanguage();
 
   return (
