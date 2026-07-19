@@ -39,6 +39,18 @@ export const GameHeader = ({ score, moves, time, onNewGame, onRestart, onHome, o
         <Button
           variant="outline"
           size="sm"
+          onClick={onUndo}
+          disabled={!canUndo}
+          className="hover:bg-primary hover:text-primary-foreground gap-1.5 text-sm sm:text-base px-2.5 sm:px-4 disabled:opacity-40"
+          aria-label="Undo"
+        >
+          <Undo2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base">Undo</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onRestart}
           className="hover:bg-primary hover:text-primary-foreground gap-1.5 text-sm sm:text-base px-2.5 sm:px-4"
         >
