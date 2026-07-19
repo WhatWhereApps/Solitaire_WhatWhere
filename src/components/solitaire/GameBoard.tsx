@@ -144,7 +144,6 @@ export const GameBoard = ({
       {deckHasCards ? (
         <Card
           card={{ id: 'deck-back', suit: 'spades', rank: 'A', faceUp: false, color: 'black' }}
-          onClick={onDeckClick}
           isSelectable={true}
           cardBackDesign={cardBackDesign}
         />
