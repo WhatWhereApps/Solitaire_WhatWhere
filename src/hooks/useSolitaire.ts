@@ -331,6 +331,8 @@ export const useSolitaire = () => {
     moveCard,
     selectCard,
     restartGame,
+    undo,
+    canUndo: history.length > 0,
     wasteCard,
     deckHasCards,
     atEnd,
