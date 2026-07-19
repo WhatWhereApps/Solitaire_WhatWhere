@@ -196,6 +196,8 @@ export const useSolitaire = () => {
     setGameState(prev => {
       const newState: GameState = { ...prev };
       let cardsToMove: Card[] = [];
+      let didSnapshot = false;
+      const snap = () => { if (!didSnapshot) { pushHistory(prev); didSnapshot = true; } };
 
       // ---- Gather cards from source ----
       if (fromType === 'waste') {
