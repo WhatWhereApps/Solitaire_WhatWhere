@@ -6,17 +6,28 @@ import { GameBoard } from './GameBoard';
 import { HomeScreen } from './HomeScreen';
 import { VictoryScreen } from './VictoryScreen';
 import { LoadingScreen } from './LoadingScreen';
+import { Card } from './Card';
 import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type Screen = 'loading' | 'home' | 'game';
 const DOUBLE_TAP_WINDOW_MS = 500;
-const SINGLE_TAP_PLAY_DELAY_MS = 520;
+const DRAG_THRESHOLD_PX = 5;
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const lastTapRef = useRef<{ cardId: string; time: number } | null>(null);
-  const singleTapTimerRef = useRef<number | null>(null);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+    card: CardType;
+    source: { type: string; index?: number; cardIndex?: number };
+    active: boolean;
+    pointerId: number;
+  } | null>(null);
+  const [dragVisual, setDragVisual] = useState<{ card: CardType; x: number; y: number } | null>(null);
   
   const { settings, updateSetting } = useGameSettings();
   
@@ -113,14 +124,20 @@ export const SolitaireGame = () => {
     return card.color !== top.color && getRankValue(card.rank) === getRankValue(top.rank) - 1;
   };
 
-  const clearSingleTapTimer = () => {
-    if (singleTapTimerRef.current !== null) {
-      window.clearTimeout(singleTapTimerRef.current);
-      singleTapTimerRef.current = null;
-    }
-  };
+  // Suppress the click event that fires after a completed drag
+  const suppressNextClickRef = useRef(false);
 
-  useEffect(() => clearSingleTapTimer, []);
+  useEffect(() => {
+    const onClickCapture = (e: MouseEvent) => {
+      if (suppressNextClickRef.current) {
+        suppressNextClickRef.current = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('click', onClickCapture, true);
+    return () => window.removeEventListener('click', onClickCapture, true);
+  }, []);
 
   const tryAutoMoveToFoundation = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number): boolean => {
     if (!isTopOfPile(pileType, pileIndex, cardIndex)) return false;
@@ -179,35 +196,91 @@ export const SolitaireGame = () => {
     triggerHaptic('light');
   };
 
-  const handleDragStart = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
-    triggerHaptic('medium');
-    setDragState({
-      isDragging: true,
-      dragCard: card,
-      dragSource: { type: pileType, index: pileIndex, cardIndex },
-    });
-  };
+  const endDrag = useCallback(() => {
+    dragRef.current = null;
+    setDragVisual(null);
+    setDragState({ isDragging: false, dragCard: null, dragSource: null });
+  }, []);
 
-  const handleDragEnd = () => {
-    setDragState({
-      isDragging: false,
-      dragCard: null,
-      dragSource: null,
-    });
-  };
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || e.pointerId !== d.pointerId) return;
 
-  const handleCardDrop = (pileType: string, pileIndex?: number) => {
-    if (!dragState.dragSource || !dragState.dragCard) return;
+    if (!d.active) {
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+      d.active = true;
+      triggerHaptic('medium');
+      setDragState({
+        isDragging: true,
+        dragCard: d.card,
+        dragSource: d.source,
+      });
+    }
+    setDragVisual({ card: d.card, x: e.clientX - d.offsetX, y: e.clientY - d.offsetY });
+  }, [triggerHaptic]);
 
-    const { type: fromType, index: fromIndex, cardIndex } = dragState.dragSource;
-    
-    // Use the existing moveCard logic
-    moveCard(fromType, fromIndex, pileType, pileIndex, cardIndex);
-    triggerHaptic('success');
-    
-    // Reset drag state
-    handleDragEnd();
-  };
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    const d = dragRef.current;
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+    window.removeEventListener('pointercancel', handlePointerUp);
+    if (!d || e.pointerId !== d.pointerId) {
+      endDrag();
+      return;
+    }
+
+    if (!d.active) {
+      // Treat as a tap: let the native click fire naturally
+      endDrag();
+      return;
+    }
+
+    // Suppress the synthesized click that follows a drag
+    suppressNextClickRef.current = true;
+    window.setTimeout(() => { suppressNextClickRef.current = false; }, 350);
+
+    // Hit-test the drop target using elementFromPoint
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    const dropEl = el?.closest('[data-drop-type]') as HTMLElement | null;
+    if (dropEl) {
+      const type = dropEl.dataset.dropType!;
+      const idxAttr = dropEl.dataset.dropIndex;
+      const idx = idxAttr !== undefined ? parseInt(idxAttr, 10) : undefined;
+      const { type: fromType, index: fromIndex, cardIndex } = d.source;
+      const isSameSource = fromType === type && fromIndex === idx;
+      if (!isSameSource) {
+        moveCard(fromType, fromIndex, type, idx, cardIndex);
+        triggerHaptic('success');
+      }
+    }
+    endDrag();
+  }, [endDrag, handlePointerMove, moveCard, triggerHaptic]);
+
+  const handlePointerDragStart = useCallback((
+    e: React.PointerEvent,
+    card: CardType,
+    pileType: string,
+    pileIndex?: number,
+    cardIndex?: number,
+  ) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      card,
+      source: { type: pileType, index: pileIndex, cardIndex },
+      active: false,
+      pointerId: e.pointerId,
+    };
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+  }, [handlePointerMove, handlePointerUp]);
 
   const handleLoadingComplete = useCallback(() => {
     setCurrentScreen('home');
@@ -251,9 +324,7 @@ export const SolitaireGame = () => {
             triggerHaptic('light');
             drawFromDeck();
           }}
-          onCardDrop={handleCardDrop}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+          onPointerDragStart={handlePointerDragStart}
           dragState={dragState}
           cardBackDesign={settings.cardBackDesign}
           handPreference={settings.handPreference}
@@ -262,6 +333,23 @@ export const SolitaireGame = () => {
           atEnd={atEnd}
         />
       </div>
+
+      {dragVisual && (
+        <div
+          className="pointer-events-none fixed z-50"
+          style={{
+            left: dragVisual.x,
+            top: dragVisual.y,
+            transform: 'rotate(2deg) scale(1.05)',
+          }}
+        >
+          <Card
+            card={{ ...dragVisual.card, faceUp: true }}
+            isSelectable={false}
+            cardBackDesign={settings.cardBackDesign}
+          />
+        </div>
+      )}
 
       {gameState.isWon && (
         <VictoryScreen
