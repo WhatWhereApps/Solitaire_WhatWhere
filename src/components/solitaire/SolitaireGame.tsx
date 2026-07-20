@@ -430,6 +430,7 @@ export const SolitaireGame = () => {
           wasteCard={wasteCard}
           deckHasCards={deckHasCards}
           atEnd={atEnd}
+          selectedCardId={selection?.card.id ?? null}
         />
       </div>
 
