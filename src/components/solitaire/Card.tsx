@@ -7,8 +7,7 @@ import { CardBackDesign, cardBackDesigns } from '@/hooks/useGameSettings';
 interface CardProps {
   card: CardType;
   onClick?: () => void;
-  onDragStart?: (e?: React.DragEvent | React.TouchEvent) => void;
-  onDragEnd?: (e?: React.DragEvent | React.TouchEvent) => void;
+  onPointerDragStart?: (e: React.PointerEvent) => void;
   isSelected?: boolean;
   isSelectable?: boolean;
   isDragging?: boolean;
@@ -24,12 +23,11 @@ const suitSymbols = {
   spades: '♠'
 };
 
-const CardComponent = ({ 
-  card, 
-  onClick, 
-  onDragStart,
-  onDragEnd,
-  isSelected = false, 
+const CardComponent = ({
+  card,
+  onClick,
+  onPointerDragStart,
+  isSelected = false,
   isSelectable = false,
   isDragging = false,
   style,
@@ -37,17 +35,9 @@ const CardComponent = ({
   cardBackDesign = 'classic-blue'
 }: CardProps) => {
 
-  const handleDragStart = (e: React.DragEvent) => {
-    if (isSelectable && onDragStart) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', card.id);
-      onDragStart(e);
-    }
-  };
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (onDragEnd) {
-      onDragEnd(e);
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (isSelectable && onPointerDragStart) {
+      onPointerDragStart(e);
     }
   };
 
@@ -59,22 +49,19 @@ const CardComponent = ({
         className={cn(
           "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-border cursor-grab active:cursor-grabbing touch-none select-none",
           "shadow-card",
-
           "flex items-center justify-center relative overflow-hidden",
-          isDragging && "opacity-50 scale-105",
+          isDragging && "opacity-30",
           isSelectable && "hover:scale-105",
           className
         )}
         onClick={onClick}
-        draggable={isSelectable}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
+        onPointerDown={handlePointerDown}
         style={{
           ...style,
           background: `linear-gradient(to bottom right, hsl(var(--${backDesign.cssVar})), hsl(var(--${backDesign.cssVar}-light)))`,
         }}
       >
-        <div 
+        <div
           className="absolute inset-2 rounded border bg-black/10"
           style={{
             borderColor: `hsl(var(--${backDesign.cssVar}-light) / 0.3)`,
@@ -90,20 +77,17 @@ const CardComponent = ({
       className={cn(
         "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 cursor-grab active:cursor-grabbing touch-none select-none",
         "bg-card text-card-foreground shadow-card relative overflow-hidden",
-
         "flex flex-col justify-between p-0.5 sm:p-1",
         isSelected && "border-card-highlight shadow-card-hover ring-2 ring-card-highlight",
         !isSelected && "border-border",
-        isDragging && "opacity-50 scale-105",
+        isDragging && "opacity-30",
         isSelectable && "hover:scale-105",
         card.color === 'red' && "text-card-red",
         card.color === 'black' && "text-card-black",
         className
       )}
       onClick={onClick}
-      draggable={isSelectable}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onPointerDown={handlePointerDown}
       style={style}
     >
       {/* Top left corner */}
@@ -131,10 +115,8 @@ export const Card = memo(CardComponent, (prev, next) => {
     prev.cardBackDesign === next.cardBackDesign &&
     prev.className === next.className &&
     prev.onClick === next.onClick &&
-    prev.onDragStart === next.onDragStart &&
-    prev.onDragEnd === next.onDragEnd &&
+    prev.onPointerDragStart === next.onPointerDragStart &&
     prev.style?.marginTop === next.style?.marginTop &&
     prev.style?.zIndex === next.style?.zIndex
   );
 });
-
