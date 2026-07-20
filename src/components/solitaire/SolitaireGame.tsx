@@ -324,9 +324,7 @@ export const SolitaireGame = () => {
             triggerHaptic('light');
             drawFromDeck();
           }}
-          onCardDrop={handleCardDrop}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+          onPointerDragStart={handlePointerDragStart}
           dragState={dragState}
           cardBackDesign={settings.cardBackDesign}
           handPreference={settings.handPreference}
@@ -335,6 +333,23 @@ export const SolitaireGame = () => {
           atEnd={atEnd}
         />
       </div>
+
+      {dragVisual && (
+        <div
+          className="pointer-events-none fixed z-50"
+          style={{
+            left: dragVisual.x,
+            top: dragVisual.y,
+            transform: 'rotate(2deg) scale(1.05)',
+          }}
+        >
+          <Card
+            card={{ ...dragVisual.card, faceUp: true }}
+            isSelectable={false}
+            cardBackDesign={settings.cardBackDesign}
+          />
+        </div>
+      )}
 
       {gameState.isWon && (
         <VictoryScreen
