@@ -88,8 +88,9 @@ const CardComponent = ({
   return (
     <div
       className={cn(
-        "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 cursor-pointer",
-        "bg-card text-card-foreground shadow-card relative overflow-hidden transition-transform duration-200",
+        "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 cursor-pointer touch-manipulation select-none",
+        "bg-card text-card-foreground shadow-card relative overflow-hidden transition-transform duration-150",
+
         "flex flex-col justify-between p-0.5 sm:p-1",
         isSelected && "border-card-highlight shadow-card-hover ring-2 ring-card-highlight",
         !isSelected && "border-border",
