@@ -17,7 +17,17 @@ const DRAG_THRESHOLD_PX = 5;
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const lastTapRef = useRef<{ cardId: string; time: number } | null>(null);
-  const singleTapTimerRef = useRef<number | null>(null);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+    card: CardType;
+    source: { type: string; index?: number; cardIndex?: number };
+    active: boolean;
+    pointerId: number;
+  } | null>(null);
+  const [dragVisual, setDragVisual] = useState<{ card: CardType; x: number; y: number } | null>(null);
   
   const { settings, updateSetting } = useGameSettings();
   
