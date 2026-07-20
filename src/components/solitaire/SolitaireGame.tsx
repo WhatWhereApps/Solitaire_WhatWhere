@@ -20,6 +20,8 @@ type Selection = { card: CardType; source: { type: string; index?: number; cardI
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const lastTapRef = useRef<{ cardId: string; time: number } | null>(null);
+  const pendingTapRef = useRef<number | null>(null);
+  const [selection, setSelection] = useState<Selection>(null);
   const dragRef = useRef<{
     startX: number;
     startY: number;
