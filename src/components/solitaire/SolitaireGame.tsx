@@ -243,7 +243,7 @@ export const SolitaireGame = () => {
         <VictoryScreen
           score={gameState.score}
           moves={gameState.moves}
-          time={gameState.time}
+          time={time}
           onNewGame={handleNewGame}
           onHome={handleBackToHome}
         />
