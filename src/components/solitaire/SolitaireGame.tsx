@@ -88,6 +88,36 @@ export const SolitaireGame = () => {
     setCurrentScreen('home');
   };
 
+  const isTopOfPile = (pileType: string, pileIndex?: number, cardIndex?: number) => {
+    if (pileType === 'waste') return true;
+    if (pileType === 'foundation') return false;
+    if (pileType === 'tableau' && pileIndex !== undefined) {
+      const pile = gameState.tableau[pileIndex];
+      return cardIndex === undefined || cardIndex === pile.length - 1;
+    }
+    return false;
+  };
+
+  const tryAutoMoveToFoundation = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number): boolean => {
+    if (!isTopOfPile(pileType, pileIndex, cardIndex)) return false;
+    for (let f = 0; f < 4; f++) {
+      const foundation = gameState.foundations[f];
+      const valid = foundation.length === 0
+        ? card.rank === 'A'
+        : (() => {
+            const top = foundation[foundation.length - 1];
+            const rankVal = (r: string) => r === 'A' ? 1 : r === 'J' ? 11 : r === 'Q' ? 12 : r === 'K' ? 13 : parseInt(r, 10);
+            return card.suit === top.suit && rankVal(card.rank) === rankVal(top.rank) + 1;
+          })();
+      if (valid) {
+        moveCard(pileType, pileIndex, 'foundation', f, cardIndex);
+        triggerHaptic('success');
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
     const currentTime = Date.now();
     const isDoubleClick = lastClickedCard === card.id && currentTime - lastClickTime < 300;
@@ -98,15 +128,15 @@ export const SolitaireGame = () => {
     // Haptic feedback for card selection
     triggerHaptic('light');
 
-    if (gameState.selectedCard) {
-      // If double-clicking the same selected card, deselect it
-      if (isDoubleClick && gameState.selectedCard.id === card.id) {
-        selectCard(card, pileType, pileIndex, cardIndex);
-        triggerHaptic('medium');
+    // Double-tap: auto-send to foundation if possible
+    if (isDoubleClick && pileType !== 'foundation') {
+      if (tryAutoMoveToFoundation(card, pileType, pileIndex, cardIndex)) {
         return;
       }
+    }
 
-      // If clicking the same card (single click), deselect
+    if (gameState.selectedCard) {
+      // If clicking the same card, deselect
       if (gameState.selectedCard.id === card.id) {
         selectCard(card, pileType, pileIndex, cardIndex);
         return;
