@@ -11,8 +11,11 @@ import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type Screen = 'loading' | 'home' | 'game';
-const DOUBLE_TAP_WINDOW_MS = 500;
+const DOUBLE_TAP_WINDOW_MS = 300;
+const SINGLE_TAP_DELAY_MS = 180;
 const DRAG_THRESHOLD_PX = 5;
+
+type Selection = { card: CardType; source: { type: string; index?: number; cardIndex?: number } } | null;
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
