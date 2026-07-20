@@ -19,6 +19,7 @@ interface GameBoardProps {
   wasteCard: CardType | null;
   deckHasCards: boolean;
   atEnd: boolean;
+  selectedCardId?: string | null;
 }
 
 export const GameBoard = ({
@@ -33,6 +34,7 @@ export const GameBoard = ({
   wasteCard,
   deckHasCards,
   atEnd,
+  selectedCardId = null,
 }: GameBoardProps) => {
   const { foundations, tableau } = gameState;
   const isRightHand = handPreference === 'right';
@@ -84,7 +86,7 @@ export const GameBoard = ({
             card={{ ...wasteCard, faceUp: true }}
             onClick={() => onCardClick(wasteCard, 'waste')}
             onPointerDragStart={(e) => onPointerDragStart(e, wasteCard, 'waste')}
-            isSelected={false}
+            isSelected={selectedCardId === wasteCard.id}
             isSelectable={true}
             isDragging={dragState.isDragging && dragState.dragCard?.id === wasteCard.id}
             cardBackDesign={cardBackDesign}
@@ -174,7 +176,7 @@ export const GameBoard = ({
                   card={card}
                   onClick={canSelect ? () => onCardClick(card, 'tableau', pileIndex, cardIndex) : undefined}
                   onPointerDragStart={canSelect ? (e) => onPointerDragStart(e, card, 'tableau', pileIndex, cardIndex) : undefined}
-                  isSelected={false}
+                  isSelected={selectedCardId === card.id}
                   isSelectable={canSelect}
                   isDragging={isDragging}
                   cardBackDesign={cardBackDesign}
