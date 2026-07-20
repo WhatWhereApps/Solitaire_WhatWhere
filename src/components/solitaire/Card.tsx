@@ -120,3 +120,21 @@ const CardComponent = ({
     </div>
   );
 };
+
+export const Card = memo(CardComponent, (prev, next) => {
+  return (
+    prev.card.id === next.card.id &&
+    prev.card.faceUp === next.card.faceUp &&
+    prev.isSelected === next.isSelected &&
+    prev.isSelectable === next.isSelectable &&
+    prev.isDragging === next.isDragging &&
+    prev.cardBackDesign === next.cardBackDesign &&
+    prev.className === next.className &&
+    prev.onClick === next.onClick &&
+    prev.onDragStart === next.onDragStart &&
+    prev.onDragEnd === next.onDragEnd &&
+    prev.style?.marginTop === next.style?.marginTop &&
+    prev.style?.zIndex === next.style?.zIndex
+  );
+});
+
