@@ -196,35 +196,91 @@ export const SolitaireGame = () => {
     triggerHaptic('light');
   };
 
-  const handleDragStart = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
-    triggerHaptic('medium');
-    setDragState({
-      isDragging: true,
-      dragCard: card,
-      dragSource: { type: pileType, index: pileIndex, cardIndex },
-    });
-  };
+  const endDrag = useCallback(() => {
+    dragRef.current = null;
+    setDragVisual(null);
+    setDragState({ isDragging: false, dragCard: null, dragSource: null });
+  }, []);
 
-  const handleDragEnd = () => {
-    setDragState({
-      isDragging: false,
-      dragCard: null,
-      dragSource: null,
-    });
-  };
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || e.pointerId !== d.pointerId) return;
 
-  const handleCardDrop = (pileType: string, pileIndex?: number) => {
-    if (!dragState.dragSource || !dragState.dragCard) return;
+    if (!d.active) {
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+      d.active = true;
+      triggerHaptic('medium');
+      setDragState({
+        isDragging: true,
+        dragCard: d.card,
+        dragSource: d.source,
+      });
+    }
+    setDragVisual({ card: d.card, x: e.clientX - d.offsetX, y: e.clientY - d.offsetY });
+  }, [triggerHaptic]);
 
-    const { type: fromType, index: fromIndex, cardIndex } = dragState.dragSource;
-    
-    // Use the existing moveCard logic
-    moveCard(fromType, fromIndex, pileType, pileIndex, cardIndex);
-    triggerHaptic('success');
-    
-    // Reset drag state
-    handleDragEnd();
-  };
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    const d = dragRef.current;
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+    window.removeEventListener('pointercancel', handlePointerUp);
+    if (!d || e.pointerId !== d.pointerId) {
+      endDrag();
+      return;
+    }
+
+    if (!d.active) {
+      // Treat as a tap: let the native click fire naturally
+      endDrag();
+      return;
+    }
+
+    // Suppress the synthesized click that follows a drag
+    suppressNextClickRef.current = true;
+    window.setTimeout(() => { suppressNextClickRef.current = false; }, 350);
+
+    // Hit-test the drop target using elementFromPoint
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    const dropEl = el?.closest('[data-drop-type]') as HTMLElement | null;
+    if (dropEl) {
+      const type = dropEl.dataset.dropType!;
+      const idxAttr = dropEl.dataset.dropIndex;
+      const idx = idxAttr !== undefined ? parseInt(idxAttr, 10) : undefined;
+      const { type: fromType, index: fromIndex, cardIndex } = d.source;
+      const isSameSource = fromType === type && fromIndex === idx;
+      if (!isSameSource) {
+        moveCard(fromType, fromIndex, type, idx, cardIndex);
+        triggerHaptic('success');
+      }
+    }
+    endDrag();
+  }, [endDrag, handlePointerMove, moveCard, triggerHaptic]);
+
+  const handlePointerDragStart = useCallback((
+    e: React.PointerEvent,
+    card: CardType,
+    pileType: string,
+    pileIndex?: number,
+    cardIndex?: number,
+  ) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      card,
+      source: { type: pileType, index: pileIndex, cardIndex },
+      active: false,
+      pointerId: e.pointerId,
+    };
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+  }, [handlePointerMove, handlePointerUp]);
 
   const handleLoadingComplete = useCallback(() => {
     setCurrentScreen('home');
