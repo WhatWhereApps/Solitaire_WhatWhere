@@ -10,6 +10,8 @@ import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type Screen = 'loading' | 'home' | 'game';
+const DOUBLE_TAP_WINDOW_MS = 500;
+const SINGLE_TAP_PLAY_DELAY_MS = 520;
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
@@ -153,7 +155,7 @@ export const SolitaireGame = () => {
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
     const now = Date.now();
     const previousTap = lastTapRef.current;
-    const isDoubleTap = previousTap?.cardId === card.id && now - previousTap.time <= 420;
+    const isDoubleTap = previousTap?.cardId === card.id && now - previousTap.time <= DOUBLE_TAP_WINDOW_MS;
 
     if (isDoubleTap) {
       clearSingleTapTimer();
@@ -176,7 +178,7 @@ export const SolitaireGame = () => {
       tryMoveToTableau(card, pileType, pileIndex, cardIndex);
       if (lastTapRef.current?.cardId === card.id) lastTapRef.current = null;
       singleTapTimerRef.current = null;
-    }, 300);
+    }, SINGLE_TAP_PLAY_DELAY_MS);
   };
 
   const handleEmptyPileClick = (pileType: string, pileIndex?: number) => {
