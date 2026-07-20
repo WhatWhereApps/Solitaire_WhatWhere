@@ -158,10 +158,12 @@ export const SolitaireGame = () => {
     const isDoubleTap = previousTap?.cardId === card.id && now - previousTap.time <= DOUBLE_TAP_WINDOW_MS;
 
     if (isDoubleTap) {
-      clearSingleTapTimer();
       lastTapRef.current = null;
 
       if (pileType !== 'foundation' && tryAutoMoveToFoundation(card, pileType, pileIndex, cardIndex)) {
+        return;
+      }
+      if (pileType !== 'foundation' && tryMoveToTableau(card, pileType, pileIndex, cardIndex)) {
         return;
       }
 
@@ -169,16 +171,8 @@ export const SolitaireGame = () => {
       return;
     }
 
-    clearSingleTapTimer();
     lastTapRef.current = { cardId: card.id, time: now };
     triggerHaptic('light');
-
-    // Single tap: play the card/stack to the first valid tableau pile, without selecting/highlighting.
-    singleTapTimerRef.current = window.setTimeout(() => {
-      tryMoveToTableau(card, pileType, pileIndex, cardIndex);
-      if (lastTapRef.current?.cardId === card.id) lastTapRef.current = null;
-      singleTapTimerRef.current = null;
-    }, SINGLE_TAP_PLAY_DELAY_MS);
   };
 
   const handleEmptyPileClick = (pileType: string, pileIndex?: number) => {
