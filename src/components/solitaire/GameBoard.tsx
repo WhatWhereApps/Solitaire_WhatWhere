@@ -176,7 +176,7 @@ export const GameBoard = ({
                   card={card}
                   onClick={canSelect ? () => onCardClick(card, 'tableau', pileIndex, cardIndex) : undefined}
                   onPointerDragStart={canSelect ? (e) => onPointerDragStart(e, card, 'tableau', pileIndex, cardIndex) : undefined}
-                  isSelected={false}
+                  isSelected={selectedCardId === card.id}
                   isSelectable={canSelect}
                   isDragging={isDragging}
                   cardBackDesign={cardBackDesign}
