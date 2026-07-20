@@ -6,12 +6,13 @@ import { GameBoard } from './GameBoard';
 import { HomeScreen } from './HomeScreen';
 import { VictoryScreen } from './VictoryScreen';
 import { LoadingScreen } from './LoadingScreen';
+import { Card } from './Card';
 import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type Screen = 'loading' | 'home' | 'game';
 const DOUBLE_TAP_WINDOW_MS = 500;
-const SINGLE_TAP_PLAY_DELAY_MS = 520;
+const DRAG_THRESHOLD_PX = 5;
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
