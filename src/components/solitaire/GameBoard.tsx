@@ -221,7 +221,7 @@ export const GameBoard = ({
                     zIndex: cardIndex,
                   }}
                   className={cn(
-                    "relative transition-all duration-300",
+                    "relative",
                     canSelect && "hover:translate-y-[-2px]",
                     !isLastCard && card.faceUp && "hover:translate-y-[-4px]"
                   )}
