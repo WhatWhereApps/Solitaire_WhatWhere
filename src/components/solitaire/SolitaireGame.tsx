@@ -322,20 +322,17 @@ export const SolitaireGame = () => {
         if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
         d.active = true;
         triggerHaptic('medium');
+        clearPendingTap();
+        setSelection(null);
         setDragState({
           isDragging: true,
           dragCard: d.card,
           dragSource: d.source,
         });
       }
-        clearPendingTap();
-        setSelection(null);
-      }
       setDragVisual({ card: d.card, x: ev.clientX - d.offsetX, y: ev.clientY - d.offsetY });
     };
 
-    // (moved) selection/tap clearing happens on drag activation above.
-    void 0;
 
     const cleanup = () => {
       target.removeEventListener('pointermove', onMove);
