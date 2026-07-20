@@ -34,6 +34,7 @@ export const GameBoard = ({
   wasteCard,
   deckHasCards,
   atEnd,
+  selectedCardId = null,
 }: GameBoardProps) => {
   const { foundations, tableau } = gameState;
   const isRightHand = handPreference === 'right';
