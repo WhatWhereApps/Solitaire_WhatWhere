@@ -208,7 +208,8 @@ export const SolitaireGame = () => {
       <GameHeader
         score={gameState.score}
         moves={gameState.moves}
-        time={gameState.time}
+        time={time}
+
         onNewGame={handleNewGame}
         onRestart={restartGame}
         onHome={handleBackToHome}
