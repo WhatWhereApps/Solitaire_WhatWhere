@@ -174,6 +174,65 @@ export const SolitaireGame = () => {
     return false;
   };
 
+  const clearPendingTap = () => {
+    if (pendingTapRef.current !== null) {
+      window.clearTimeout(pendingTapRef.current);
+      pendingTapRef.current = null;
+    }
+  };
+
+  const canPlayOnFoundation = (card: CardType, foundation: CardType[]) => {
+    if (foundation.length === 0) return card.rank === 'A';
+    const top = foundation[foundation.length - 1];
+    return card.suit === top.suit && getRankValue(card.rank) === getRankValue(top.rank) + 1;
+  };
+
+  const attemptMoveSelectionTo = (destType: string, destIndex?: number): boolean => {
+    if (!selection) return false;
+    const { card, source } = selection;
+    if (destType === 'foundation' && destIndex !== undefined) {
+      // Only the top card can go to foundation
+      if (source.type === 'tableau' && source.cardIndex !== undefined) {
+        const pile = gameState.tableau[source.index!];
+        if (source.cardIndex !== pile.length - 1) return false;
+      }
+      if (!canPlayOnFoundation(card, gameState.foundations[destIndex])) return false;
+      moveCard(source.type, source.index, 'foundation', destIndex, source.cardIndex);
+      triggerHaptic('success');
+      setSelection(null);
+      return true;
+    }
+    if (destType === 'tableau' && destIndex !== undefined) {
+      if (source.type === 'tableau' && source.index === destIndex) return false;
+      if (!canPlayOnTableau(card, gameState.tableau[destIndex])) return false;
+      moveCard(source.type, source.index, 'tableau', destIndex, source.cardIndex);
+      triggerHaptic('success');
+      setSelection(null);
+      return true;
+    }
+    return false;
+  };
+
+  const performSingleTap = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
+    // If something is already selected, try to move it onto this pile
+    if (selection) {
+      if (selection.card.id === card.id) {
+        setSelection(null);
+        return;
+      }
+      const moved = attemptMoveSelectionTo(pileType, pileIndex);
+      if (moved) return;
+      // Fall through: switch selection to the newly tapped card
+    }
+
+    // Select this card if it's a legal source
+    if (pileType === 'foundation') {
+      setSelection(null);
+      return;
+    }
+    setSelection({ card, source: { type: pileType, index: pileIndex, cardIndex } });
+  };
+
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
     const now = Date.now();
     const previousTap = lastTapRef.current;
@@ -181,6 +240,8 @@ export const SolitaireGame = () => {
 
     if (isDoubleTap) {
       lastTapRef.current = null;
+      clearPendingTap();
+      setSelection(null);
 
       if (pileType !== 'foundation' && tryAutoMoveToFoundation(card, pileType, pileIndex, cardIndex)) {
         return;
@@ -195,9 +256,25 @@ export const SolitaireGame = () => {
 
     lastTapRef.current = { cardId: card.id, time: now };
     triggerHaptic('light');
+
+    // Delay single-tap so a follow-up tap can be captured as double-tap
+    clearPendingTap();
+    pendingTapRef.current = window.setTimeout(() => {
+      pendingTapRef.current = null;
+      performSingleTap(card, pileType, pileIndex, cardIndex);
+    }, SINGLE_TAP_DELAY_MS);
   };
 
   const handleEmptyPileClick = (pileType: string, pileIndex?: number) => {
+    clearPendingTap();
+    if (selection) {
+      const moved = attemptMoveSelectionTo(pileType, pileIndex);
+      if (!moved) {
+        triggerHaptic('error');
+        setSelection(null);
+      }
+      return;
+    }
     triggerHaptic('light');
   };
 
