@@ -1,6 +1,8 @@
+import { memo } from 'react';
 import { Card as CardType } from '@/types/solitaire';
 import { cn } from '@/lib/utils';
 import { CardBackDesign, cardBackDesigns } from '@/hooks/useGameSettings';
+
 
 interface CardProps {
   card: CardType;
