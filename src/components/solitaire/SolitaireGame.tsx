@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSolitaire } from '@/hooks/useSolitaire';
 import { useGameSettings } from '@/hooks/useGameSettings';
 import { GameHeader } from './GameHeader';
@@ -13,8 +13,8 @@ type Screen = 'loading' | 'home' | 'game';
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
-  const [lastClickTime, setLastClickTime] = useState(0);
-  const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
+  const lastClickTimeRef = useRef(0);
+  const lastClickedCardRef = useRef<string | null>(null);
   
   const { settings, updateSetting } = useGameSettings();
   
@@ -120,10 +120,10 @@ export const SolitaireGame = () => {
 
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
     const currentTime = Date.now();
-    const isDoubleClick = lastClickedCard === card.id && currentTime - lastClickTime < 300;
-    
-    setLastClickTime(currentTime);
-    setLastClickedCard(card.id);
+    const isDoubleClick = lastClickedCardRef.current === card.id && currentTime - lastClickTimeRef.current < 400;
+
+    lastClickTimeRef.current = currentTime;
+    lastClickedCardRef.current = card.id;
 
     // Haptic feedback for card selection
     triggerHaptic('light');
