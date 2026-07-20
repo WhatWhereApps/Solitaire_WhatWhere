@@ -74,7 +74,9 @@ export const useSolitaire = () => {
     time: 0,
     isWon: false,
   }));
+  const [time, setTime] = useState(0);
   const [history, setHistory] = useState<GameState[]>([]);
+
 
   /** Snapshot current state (deep enough for undo) before a mutating action. */
   const snapshot = useCallback((s: GameState): GameState => ({
