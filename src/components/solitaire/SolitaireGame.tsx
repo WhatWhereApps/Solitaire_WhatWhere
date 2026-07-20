@@ -20,6 +20,7 @@ export const SolitaireGame = () => {
   
   const { 
     gameState, 
+    time,
     dealCards, 
     drawFromDeck, 
     moveCard, 
@@ -32,6 +33,7 @@ export const SolitaireGame = () => {
     atEnd,
     atStart,
   } = useSolitaire();
+
 
   const [dragState, setDragState] = useState({
     isDragging: false,
