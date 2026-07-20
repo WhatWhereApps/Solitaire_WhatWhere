@@ -1,6 +1,8 @@
+import { memo } from 'react';
 import { Card as CardType } from '@/types/solitaire';
 import { cn } from '@/lib/utils';
 import { CardBackDesign, cardBackDesigns } from '@/hooks/useGameSettings';
+
 
 interface CardProps {
   card: CardType;
@@ -22,7 +24,7 @@ const suitSymbols = {
   spades: '♠'
 };
 
-export const Card = ({ 
+const CardComponent = ({ 
   card, 
   onClick, 
   onDragStart,
@@ -34,6 +36,7 @@ export const Card = ({
   className,
   cardBackDesign = 'classic-blue'
 }: CardProps) => {
+
   const handleDragStart = (e: React.DragEvent) => {
     if (isSelectable && onDragStart) {
       e.dataTransfer.effectAllowed = 'move';
@@ -54,8 +57,9 @@ export const Card = ({
     return (
       <div
         className={cn(
-          "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-border cursor-pointer",
-          "shadow-card transition-transform duration-200",
+          "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-border cursor-pointer touch-manipulation select-none",
+          "shadow-card transition-transform duration-150",
+
           "flex items-center justify-center relative overflow-hidden",
           isDragging && "opacity-50 scale-105",
           isSelectable && "hover:scale-105",
@@ -84,8 +88,9 @@ export const Card = ({
   return (
     <div
       className={cn(
-        "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 cursor-pointer",
-        "bg-card text-card-foreground shadow-card relative overflow-hidden transition-transform duration-200",
+        "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 cursor-pointer touch-manipulation select-none",
+        "bg-card text-card-foreground shadow-card relative overflow-hidden transition-transform duration-150",
+
         "flex flex-col justify-between p-0.5 sm:p-1",
         isSelected && "border-card-highlight shadow-card-hover ring-2 ring-card-highlight",
         !isSelected && "border-border",
@@ -115,3 +120,21 @@ export const Card = ({
     </div>
   );
 };
+
+export const Card = memo(CardComponent, (prev, next) => {
+  return (
+    prev.card.id === next.card.id &&
+    prev.card.faceUp === next.card.faceUp &&
+    prev.isSelected === next.isSelected &&
+    prev.isSelectable === next.isSelectable &&
+    prev.isDragging === next.isDragging &&
+    prev.cardBackDesign === next.cardBackDesign &&
+    prev.className === next.className &&
+    prev.onClick === next.onClick &&
+    prev.onDragStart === next.onDragStart &&
+    prev.onDragEnd === next.onDragEnd &&
+    prev.style?.marginTop === next.style?.marginTop &&
+    prev.style?.zIndex === next.style?.zIndex
+  );
+});
+

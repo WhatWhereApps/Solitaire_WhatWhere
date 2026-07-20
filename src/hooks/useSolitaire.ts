@@ -74,7 +74,9 @@ export const useSolitaire = () => {
     time: 0,
     isWon: false,
   }));
+  const [time, setTime] = useState(0);
   const [history, setHistory] = useState<GameState[]>([]);
+
 
   /** Snapshot current state (deep enough for undo) before a mutating action. */
   const snapshot = useCallback((s: GameState): GameState => ({
@@ -141,8 +143,10 @@ export const useSolitaire = () => {
       time: 0,
       isWon: false,
     });
+    setTime(0);
     setHistory([]);
   }, [createDeck]);
+
 
   /**
    * Draw one card from deck onto waste.
@@ -279,7 +283,7 @@ export const useSolitaire = () => {
     setHistory(h => {
       if (h.length === 0) return h;
       const prev = h[h.length - 1];
-      setGameState(current => ({ ...prev, time: current.time }));
+      setGameState(() => prev);
       return h.slice(0, -1);
     });
   }, []);
@@ -302,11 +306,11 @@ export const useSolitaire = () => {
     dealCards();
   }, [dealCards]);
 
-  // Timer
+  // Timer — kept in its own state so ticks don't re-render the game board
   useEffect(() => {
     if (gameState.isWon) return;
     const timer = setInterval(() => {
-      setGameState(prev => ({ ...prev, time: prev.time + 1 }));
+      setTime(t => t + 1);
     }, 1000);
     return () => clearInterval(timer);
   }, [gameState.isWon]);
@@ -326,6 +330,7 @@ export const useSolitaire = () => {
 
   return {
     gameState,
+    time,
     dealCards,
     drawFromDeck,
     moveCard,
@@ -339,3 +344,4 @@ export const useSolitaire = () => {
     atStart,
   };
 };
+

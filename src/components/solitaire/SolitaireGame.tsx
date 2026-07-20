@@ -20,6 +20,7 @@ export const SolitaireGame = () => {
   
   const { 
     gameState, 
+    time,
     dealCards, 
     drawFromDeck, 
     moveCard, 
@@ -32,6 +33,7 @@ export const SolitaireGame = () => {
     atEnd,
     atStart,
   } = useSolitaire();
+
 
   const [dragState, setDragState] = useState({
     isDragging: false,
@@ -206,7 +208,8 @@ export const SolitaireGame = () => {
       <GameHeader
         score={gameState.score}
         moves={gameState.moves}
-        time={gameState.time}
+        time={time}
+
         onNewGame={handleNewGame}
         onRestart={restartGame}
         onHome={handleBackToHome}
@@ -240,7 +243,7 @@ export const SolitaireGame = () => {
         <VictoryScreen
           score={gameState.score}
           moves={gameState.moves}
-          time={gameState.time}
+          time={time}
           onNewGame={handleNewGame}
           onHome={handleBackToHome}
         />
