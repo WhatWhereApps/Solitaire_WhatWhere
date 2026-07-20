@@ -143,8 +143,10 @@ export const useSolitaire = () => {
       time: 0,
       isWon: false,
     });
+    setTime(0);
     setHistory([]);
   }, [createDeck]);
+
 
   /**
    * Draw one card from deck onto waste.
