@@ -24,7 +24,7 @@ const suitSymbols = {
   spades: '♠'
 };
 
-export const Card = ({ 
+const CardComponent = ({ 
   card, 
   onClick, 
   onDragStart,
@@ -36,6 +36,7 @@ export const Card = ({
   className,
   cardBackDesign = 'classic-blue'
 }: CardProps) => {
+
   const handleDragStart = (e: React.DragEvent) => {
     if (isSelectable && onDragStart) {
       e.dataTransfer.effectAllowed = 'move';
