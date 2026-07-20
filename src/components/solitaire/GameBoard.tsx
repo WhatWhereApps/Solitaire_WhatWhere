@@ -19,6 +19,7 @@ interface GameBoardProps {
   wasteCard: CardType | null;
   deckHasCards: boolean;
   atEnd: boolean;
+  selectedCardId?: string | null;
 }
 
 export const GameBoard = ({
