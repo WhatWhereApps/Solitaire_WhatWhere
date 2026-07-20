@@ -86,7 +86,7 @@ export const GameBoard = ({
             card={{ ...wasteCard, faceUp: true }}
             onClick={() => onCardClick(wasteCard, 'waste')}
             onPointerDragStart={(e) => onPointerDragStart(e, wasteCard, 'waste')}
-            isSelected={false}
+            isSelected={selectedCardId === wasteCard.id}
             isSelectable={true}
             isDragging={dragState.isDragging && dragState.dragCard?.id === wasteCard.id}
             cardBackDesign={cardBackDesign}
