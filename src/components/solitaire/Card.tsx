@@ -57,8 +57,8 @@ const CardComponent = ({
     return (
       <div
         className={cn(
-          "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-border cursor-pointer touch-manipulation select-none",
-          "shadow-card transition-transform duration-150",
+          "w-12 h-18 sm:w-16 sm:h-22 md:w-18 md:h-26 lg:w-20 lg:h-32 rounded-lg border-2 border-border cursor-grab active:cursor-grabbing touch-none select-none",
+          "shadow-card",
 
           "flex items-center justify-center relative overflow-hidden",
           isDragging && "opacity-50 scale-105",
