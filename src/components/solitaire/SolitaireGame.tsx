@@ -124,14 +124,20 @@ export const SolitaireGame = () => {
     return card.color !== top.color && getRankValue(card.rank) === getRankValue(top.rank) - 1;
   };
 
-  const clearSingleTapTimer = () => {
-    if (singleTapTimerRef.current !== null) {
-      window.clearTimeout(singleTapTimerRef.current);
-      singleTapTimerRef.current = null;
-    }
-  };
+  // Suppress the click event that fires after a completed drag
+  const suppressNextClickRef = useRef(false);
 
-  useEffect(() => clearSingleTapTimer, []);
+  useEffect(() => {
+    const onClickCapture = (e: MouseEvent) => {
+      if (suppressNextClickRef.current) {
+        suppressNextClickRef.current = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('click', onClickCapture, true);
+    return () => window.removeEventListener('click', onClickCapture, true);
+  }, []);
 
   const tryAutoMoveToFoundation = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number): boolean => {
     if (!isTopOfPile(pileType, pileIndex, cardIndex)) return false;
