@@ -120,10 +120,10 @@ export const SolitaireGame = () => {
 
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
     const currentTime = Date.now();
-    const isDoubleClick = lastClickedCard === card.id && currentTime - lastClickTime < 300;
-    
-    setLastClickTime(currentTime);
-    setLastClickedCard(card.id);
+    const isDoubleClick = lastClickedCardRef.current === card.id && currentTime - lastClickTimeRef.current < 400;
+
+    lastClickTimeRef.current = currentTime;
+    lastClickedCardRef.current = card.id;
 
     // Haptic feedback for card selection
     triggerHaptic('light');
