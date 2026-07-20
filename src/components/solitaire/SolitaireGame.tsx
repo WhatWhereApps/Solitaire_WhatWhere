@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSolitaire } from '@/hooks/useSolitaire';
 import { useGameSettings } from '@/hooks/useGameSettings';
 import { GameHeader } from './GameHeader';
@@ -10,11 +10,13 @@ import { Card as CardType } from '@/types/solitaire';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type Screen = 'loading' | 'home' | 'game';
+const DOUBLE_TAP_WINDOW_MS = 500;
+const SINGLE_TAP_PLAY_DELAY_MS = 520;
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
-  const lastClickTimeRef = useRef(0);
-  const lastClickedCardRef = useRef<string | null>(null);
+  const lastTapRef = useRef<{ cardId: string; time: number } | null>(null);
+  const singleTapTimerRef = useRef<number | null>(null);
   
   const { settings, updateSetting } = useGameSettings();
   
@@ -24,7 +26,6 @@ export const SolitaireGame = () => {
     dealCards, 
     drawFromDeck, 
     moveCard, 
-    selectCard, 
     restartGame,
     undo,
     canUndo,
@@ -98,17 +99,37 @@ export const SolitaireGame = () => {
     return false;
   };
 
+  const getRankValue = (rank: string) => {
+    if (rank === 'A') return 1;
+    if (rank === 'J') return 11;
+    if (rank === 'Q') return 12;
+    if (rank === 'K') return 13;
+    return parseInt(rank, 10);
+  };
+
+  const canPlayOnTableau = (card: CardType, tableauPile: CardType[]) => {
+    if (tableauPile.length === 0) return card.rank === 'K';
+    const top = tableauPile[tableauPile.length - 1];
+    return card.color !== top.color && getRankValue(card.rank) === getRankValue(top.rank) - 1;
+  };
+
+  const clearSingleTapTimer = () => {
+    if (singleTapTimerRef.current !== null) {
+      window.clearTimeout(singleTapTimerRef.current);
+      singleTapTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => clearSingleTapTimer, []);
+
   const tryAutoMoveToFoundation = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number): boolean => {
     if (!isTopOfPile(pileType, pileIndex, cardIndex)) return false;
     for (let f = 0; f < 4; f++) {
       const foundation = gameState.foundations[f];
       const valid = foundation.length === 0
         ? card.rank === 'A'
-        : (() => {
-            const top = foundation[foundation.length - 1];
-            const rankVal = (r: string) => r === 'A' ? 1 : r === 'J' ? 11 : r === 'Q' ? 12 : r === 'K' ? 13 : parseInt(r, 10);
-            return card.suit === top.suit && rankVal(card.rank) === rankVal(top.rank) + 1;
-          })();
+        : card.suit === foundation[foundation.length - 1].suit &&
+          getRankValue(card.rank) === getRankValue(foundation[foundation.length - 1].rank) + 1;
       if (valid) {
         moveCard(pileType, pileIndex, 'foundation', f, cardIndex);
         triggerHaptic('success');
@@ -118,71 +139,50 @@ export const SolitaireGame = () => {
     return false;
   };
 
+  const tryMoveToTableau = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number): boolean => {
+    for (let t = 0; t < gameState.tableau.length; t++) {
+      if (pileType === 'tableau' && pileIndex === t) continue;
+      if (!canPlayOnTableau(card, gameState.tableau[t])) continue;
+
+      moveCard(pileType, pileIndex, 'tableau', t, cardIndex);
+      triggerHaptic('success');
+      return true;
+    }
+
+    return false;
+  };
+
   const handleCardClick = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {
-    const currentTime = Date.now();
-    const isDoubleClick = lastClickedCardRef.current === card.id && currentTime - lastClickTimeRef.current < 400;
+    const now = Date.now();
+    const previousTap = lastTapRef.current;
+    const isDoubleTap = previousTap?.cardId === card.id && now - previousTap.time <= DOUBLE_TAP_WINDOW_MS;
 
-    lastClickTimeRef.current = currentTime;
-    lastClickedCardRef.current = card.id;
+    if (isDoubleTap) {
+      clearSingleTapTimer();
+      lastTapRef.current = null;
 
-    // Haptic feedback for card selection
+      if (pileType !== 'foundation' && tryAutoMoveToFoundation(card, pileType, pileIndex, cardIndex)) {
+        return;
+      }
+
+      triggerHaptic('error');
+      return;
+    }
+
+    clearSingleTapTimer();
+    lastTapRef.current = { cardId: card.id, time: now };
     triggerHaptic('light');
 
-    // Double-tap: auto-send to foundation if possible
-    if (isDoubleClick && pileType !== 'foundation') {
-      if (tryAutoMoveToFoundation(card, pileType, pileIndex, cardIndex)) {
-        return;
-      }
-    }
-
-    if (gameState.selectedCard) {
-      // If clicking the same card, deselect
-      if (gameState.selectedCard.id === card.id) {
-        selectCard(card, pileType, pileIndex, cardIndex);
-        return;
-      }
-
-      // Try to move selected card to clicked location
-      const { selectedPile, cardIndex: cardIdx } = gameState;
-      if (selectedPile) {
-        const fromIndex = selectedPile.index;
-        
-        // Try to move to this pile
-        if (pileType === 'foundation' && pileIndex !== undefined) {
-          moveCard(selectedPile.type, fromIndex, 'foundation', pileIndex, cardIdx);
-        } else if (pileType === 'tableau' && pileIndex !== undefined) {
-          moveCard(selectedPile.type, fromIndex, 'tableau', pileIndex, cardIdx);
-        } else {
-          // Select new card instead
-          selectCard(card, pileType, pileIndex, cardIndex);
-          return;
-        }
-        
-        // Success haptic for card move
-        triggerHaptic('success');
-      }
-    } else {
-      // Select card
-      selectCard(card, pileType, pileIndex, cardIndex);
-    }
+    // Single tap: play the card/stack to the first valid tableau pile, without selecting/highlighting.
+    singleTapTimerRef.current = window.setTimeout(() => {
+      tryMoveToTableau(card, pileType, pileIndex, cardIndex);
+      if (lastTapRef.current?.cardId === card.id) lastTapRef.current = null;
+      singleTapTimerRef.current = null;
+    }, SINGLE_TAP_PLAY_DELAY_MS);
   };
 
   const handleEmptyPileClick = (pileType: string, pileIndex?: number) => {
-    if (gameState.selectedCard && gameState.selectedPile) {
-      const { selectedPile, cardIndex: cardIdx } = gameState;
-      const fromIndex = selectedPile.index;
-      
-      triggerHaptic('light');
-
-      if (pileType === 'foundation' && pileIndex !== undefined) {
-        moveCard(selectedPile.type, fromIndex, 'foundation', pileIndex, cardIdx);
-      } else if (pileType === 'tableau' && pileIndex !== undefined) {
-        moveCard(selectedPile.type, fromIndex, 'tableau', pileIndex, cardIdx);
-      }
-      
-      // Success haptic for pile move
-      triggerHaptic('success');
-    }
+    triggerHaptic('light');
   };
 
   const handleDragStart = (card: CardType, pileType: string, pileIndex?: number, cardIndex?: number) => {

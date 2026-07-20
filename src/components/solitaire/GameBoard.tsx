@@ -39,7 +39,7 @@ export const GameBoard = ({
   deckHasCards,
   atEnd,
 }: GameBoardProps) => {
-  const { foundations, tableau, selectedCard } = gameState;
+  const { foundations, tableau } = gameState;
 
   // For right-hand: foundations left, deck right
   // For left-hand: deck left, foundations right
@@ -75,7 +75,7 @@ export const GameBoard = ({
               onClick={() => onCardClick(foundation[foundation.length - 1], 'foundation', index)}
               onDragStart={(e) => onDragStart(foundation[foundation.length - 1], 'foundation', index)}
               onDragEnd={onDragEnd}
-              isSelected={selectedCard?.id === foundation[foundation.length - 1]?.id}
+              isSelected={false}
               isSelectable={true}
               isDragging={dragState.isDragging && dragState.dragCard?.id === foundation[foundation.length - 1]?.id}
               cardBackDesign={cardBackDesign}
@@ -113,7 +113,7 @@ export const GameBoard = ({
             onClick={() => onCardClick(wasteCard, 'waste')}
             onDragStart={(e) => onDragStart(wasteCard, 'waste')}
             onDragEnd={onDragEnd}
-            isSelected={selectedCard?.id === wasteCard.id}
+            isSelected={false}
             isSelectable={true}
             isDragging={dragState.isDragging && dragState.dragCard?.id === wasteCard.id}
             cardBackDesign={cardBackDesign}
@@ -212,7 +212,7 @@ export const GameBoard = ({
                   onClick={canSelect ? () => onCardClick(card, 'tableau', pileIndex, cardIndex) : undefined}
                   onDragStart={canSelect ? (e) => onDragStart(card, 'tableau', pileIndex, cardIndex) : undefined}
                   onDragEnd={onDragEnd}
-                  isSelected={selectedCard?.id === card.id}
+                  isSelected={false}
                   isSelectable={canSelect}
                   isDragging={isDragging}
                   cardBackDesign={cardBackDesign}
