@@ -202,62 +202,6 @@ export const SolitaireGame = () => {
     setDragState({ isDragging: false, dragCard: null, dragSource: null });
   }, []);
 
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    const d = dragRef.current;
-    if (!d || e.pointerId !== d.pointerId) return;
-
-    if (!d.active) {
-      const dx = e.clientX - d.startX;
-      const dy = e.clientY - d.startY;
-      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
-      d.active = true;
-      triggerHaptic('medium');
-      setDragState({
-        isDragging: true,
-        dragCard: d.card,
-        dragSource: d.source,
-      });
-    }
-    setDragVisual({ card: d.card, x: e.clientX - d.offsetX, y: e.clientY - d.offsetY });
-  }, [triggerHaptic]);
-
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    const d = dragRef.current;
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup', handlePointerUp);
-    window.removeEventListener('pointercancel', handlePointerUp);
-    if (!d || e.pointerId !== d.pointerId) {
-      endDrag();
-      return;
-    }
-
-    if (!d.active) {
-      // Treat as a tap: let the native click fire naturally
-      endDrag();
-      return;
-    }
-
-    // Suppress the synthesized click that follows a drag
-    suppressNextClickRef.current = true;
-    window.setTimeout(() => { suppressNextClickRef.current = false; }, 350);
-
-    // Hit-test the drop target using elementFromPoint
-    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-    const dropEl = el?.closest('[data-drop-type]') as HTMLElement | null;
-    if (dropEl) {
-      const type = dropEl.dataset.dropType!;
-      const idxAttr = dropEl.dataset.dropIndex;
-      const idx = idxAttr !== undefined ? parseInt(idxAttr, 10) : undefined;
-      const { type: fromType, index: fromIndex, cardIndex } = d.source;
-      const isSameSource = fromType === type && fromIndex === idx;
-      if (!isSameSource) {
-        moveCard(fromType, fromIndex, type, idx, cardIndex);
-        triggerHaptic('success');
-      }
-    }
-    endDrag();
-  }, [endDrag, handlePointerMove, moveCard, triggerHaptic]);
-
   const handlePointerDragStart = useCallback((
     e: React.PointerEvent,
     card: CardType,
@@ -266,7 +210,11 @@ export const SolitaireGame = () => {
     cardIndex?: number,
   ) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const pointerId = e.pointerId;
+
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -275,12 +223,78 @@ export const SolitaireGame = () => {
       card,
       source: { type: pileType, index: pileIndex, cardIndex },
       active: false,
-      pointerId: e.pointerId,
+      pointerId,
     };
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
-  }, [handlePointerMove, handlePointerUp]);
+
+    // Capture the pointer to the source element so subsequent move/up events
+    // reliably fire on it (critical on iOS WKWebView).
+    try { target.setPointerCapture(pointerId); } catch { /* noop */ }
+
+    const onMove = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d || ev.pointerId !== d.pointerId) return;
+
+      if (!d.active) {
+        const dx = ev.clientX - d.startX;
+        const dy = ev.clientY - d.startY;
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+        d.active = true;
+        triggerHaptic('medium');
+        setDragState({
+          isDragging: true,
+          dragCard: d.card,
+          dragSource: d.source,
+        });
+      }
+      setDragVisual({ card: d.card, x: ev.clientX - d.offsetX, y: ev.clientY - d.offsetY });
+    };
+
+    const cleanup = () => {
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerup', onUp);
+      target.removeEventListener('pointercancel', onUp);
+      try { target.releasePointerCapture(pointerId); } catch { /* noop */ }
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      cleanup();
+      if (!d || ev.pointerId !== d.pointerId) {
+        endDrag();
+        return;
+      }
+
+      if (!d.active) {
+        // Treat as a tap: let the native click fire naturally
+        endDrag();
+        return;
+      }
+
+      // Suppress the synthesized click that follows a drag
+      suppressNextClickRef.current = true;
+      window.setTimeout(() => { suppressNextClickRef.current = false; }, 350);
+
+      // Hit-test the drop target using elementFromPoint
+      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+      const dropEl = el?.closest('[data-drop-type]') as HTMLElement | null;
+      if (dropEl) {
+        const type = dropEl.dataset.dropType!;
+        const idxAttr = dropEl.dataset.dropIndex;
+        const idx = idxAttr !== undefined ? parseInt(idxAttr, 10) : undefined;
+        const { type: fromType, index: fromIndex, cardIndex: srcCardIndex } = d.source;
+        const isSameSource = fromType === type && fromIndex === idx;
+        if (!isSameSource) {
+          moveCard(fromType, fromIndex, type, idx, srcCardIndex);
+          triggerHaptic('success');
+        }
+      }
+      endDrag();
+    };
+
+    target.addEventListener('pointermove', onMove);
+    target.addEventListener('pointerup', onUp);
+    target.addEventListener('pointercancel', onUp);
+  }, [endDrag, moveCard, triggerHaptic]);
 
   const handleLoadingComplete = useCallback(() => {
     setCurrentScreen('home');
