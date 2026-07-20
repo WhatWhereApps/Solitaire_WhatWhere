@@ -13,8 +13,8 @@ type Screen = 'loading' | 'home' | 'game';
 
 export const SolitaireGame = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
-  const [lastClickTime, setLastClickTime] = useState(0);
-  const [lastClickedCard, setLastClickedCard] = useState<string | null>(null);
+  const lastClickTimeRef = useRef(0);
+  const lastClickedCardRef = useRef<string | null>(null);
   
   const { settings, updateSetting } = useGameSettings();
   
